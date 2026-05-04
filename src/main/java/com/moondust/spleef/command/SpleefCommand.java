@@ -34,7 +34,7 @@ public final class SpleefCommand implements CommandExecutor, TabCompleter {
     private static final List<String> ADMIN_COMMANDS = List.of(
             "forcestart", "reload", "setlobby", "setspawn", "pos1", "setpos1", "pos2", "setpos2",
             "snowpos1", "setsnowpos1", "snowpos2", "setsnowpos2", "savearena",
-            "sethologram", "rotate", "map", "givebattle", "givecosmetic", "unlock", "npcshop", "coins", "booster"
+            "sethologram", "rotate", "map", "givebattle", "givecosmetic", "unlock", "npcshop", "openshop", "coins", "booster"
     );
     private static final List<String> UNLOCK_TYPES = List.of(
             "particle", "player_particle", "blockbreakparticle", "block_break_particle", "shovel", "gear"
@@ -130,6 +130,7 @@ public final class SpleefCommand implements CommandExecutor, TabCompleter {
             case "givecosmetic" -> giveCosmetic(sender, args);
             case "unlock" -> unlockCosmetic(sender, args);
             case "npcshop" -> npcShop(sender, args);
+            case "openshop" -> openShop(sender, args);
             case "coins" -> coins(sender, args);
             case "booster" -> booster(sender, args);
             default -> {
@@ -160,6 +161,7 @@ public final class SpleefCommand implements CommandExecutor, TabCompleter {
         plugin.messageText(sender, "&b/spleef admin savearena [map] &7- save snow snapshot", Map.of());
         plugin.messageText(sender, "&b/spleef admin unlock <player> <type> <id> &7- unlock cosmetic", Map.of());
         plugin.messageText(sender, "&b/spleef admin npcshop <shop_id|clear> &7- bind selected Citizens NPC", Map.of());
+        plugin.messageText(sender, "&b/spleef admin openshop <player> <shop_id> &7- open a Spleef shop", Map.of());
         plugin.messageText(sender, "&b/spleef admin givebattle <player> <item> [amount]", Map.of());
         plugin.messageText(sender, "&b/spleef admin givecosmetic <player> <category> <id>", Map.of());
         plugin.messageText(sender, "&b/spleef admin reload &7- reload config", Map.of());
@@ -456,6 +458,29 @@ public final class SpleefCommand implements CommandExecutor, TabCompleter {
         return true;
     }
 
+    private boolean openShop(CommandSender sender, String[] args) {
+        if (!requireAdmin(sender)) {
+            return true;
+        }
+        if (args.length < 3) {
+            plugin.messageText(sender, "&cUsage: /spleef admin openshop <player> <shop_id>", Map.of());
+            return true;
+        }
+        Player target = Bukkit.getPlayerExact(args[1]);
+        if (target == null) {
+            plugin.messageText(sender, "&cUnknown player.", Map.of());
+            return true;
+        }
+        String shopId = args[2];
+        if (!shopService.shopExists(shopId)) {
+            plugin.messageText(sender, "&cUnknown shop id.", Map.of());
+            return true;
+        }
+        Bukkit.getScheduler().runTaskLater(plugin, () -> shopService.openShop(target, shopId), 2L);
+        plugin.messageText(sender, "&aOpening Spleef shop &f" + shopId + " &afor &f" + target.getName() + "&a.", Map.of());
+        return true;
+    }
+
     private boolean coins(CommandSender sender, String[] args) {
         if (!requireAdmin(sender)) {
             return true;
@@ -584,7 +609,7 @@ public final class SpleefCommand implements CommandExecutor, TabCompleter {
             values.add("clear");
             return filter(values, args[2]);
         }
-        if (args.length == 3 && List.of("givebattle", "givecosmetic", "unlock", "coins").contains(adminSub)) {
+        if (args.length == 3 && List.of("givebattle", "givecosmetic", "unlock", "openshop", "coins").contains(adminSub)) {
             return filter(Bukkit.getOnlinePlayers().stream().map(Player::getName).toList(), args[2]);
         }
         if (args.length == 4 && adminSub.equals("givebattle")) {
@@ -595,6 +620,9 @@ public final class SpleefCommand implements CommandExecutor, TabCompleter {
         }
         if (args.length == 4 && adminSub.equals("unlock")) {
             return filter(UNLOCK_TYPES, args[3]);
+        }
+        if (args.length == 4 && adminSub.equals("openshop")) {
+            return filter(shopService.shopIds(), args[3]);
         }
         if (args.length == 5 && adminSub.equals("givecosmetic")) {
             return filter(new ArrayList<>(registry.cosmetics(args[3]).keySet()), args[4]);

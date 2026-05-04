@@ -700,8 +700,7 @@ public final class GameManager implements Listener {
     }
 
     private boolean isHoldingShovel(Player player) {
-        ItemStack item = player.getInventory().getItemInMainHand();
-        return item != null && item.getType().name().endsWith("_SHOVEL");
+        return registry.isSpleefShovel(player.getInventory().getItemInMainHand());
     }
 
     private void awardCoins(Player player, double baseCoins) {
@@ -813,7 +812,7 @@ public final class GameManager implements Listener {
         return player != null && player.isOp() && !isActive(player);
     }
 
-    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
     public void onInteract(PlayerInteractEvent event) {
         if (event.getHand() != EquipmentSlot.HAND || event.getAction() != Action.LEFT_CLICK_BLOCK || event.getClickedBlock() == null) {
             return;
@@ -823,7 +822,7 @@ public final class GameManager implements Listener {
         }
     }
 
-    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
     public void onBlockBreak(BlockBreakEvent event) {
         ArenaMap map = currentMap();
         if (map == null || !map.inArena(event.getBlock().getLocation())) {
@@ -836,7 +835,7 @@ public final class GameManager implements Listener {
         handleSnowBreak(event.getPlayer(), event.getBlock());
     }
 
-    @EventHandler(ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.LOWEST, ignoreCancelled = true)
     public void onBlockDamage(BlockDamageEvent event) {
         ArenaMap map = currentMap();
         if (map != null && map.inArena(event.getBlock().getLocation())) {
@@ -852,6 +851,9 @@ public final class GameManager implements Listener {
     public void onBlockPlace(BlockPlaceEvent event) {
         ArenaMap map = currentMap();
         if (map != null && map.inArena(event.getBlockPlaced().getLocation())) {
+            if (canBypassArenaBreakProtection(event.getPlayer())) {
+                return;
+            }
             event.setCancelled(true);
         }
     }

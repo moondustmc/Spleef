@@ -194,6 +194,30 @@ public final class ContentRegistry {
         return meta.getPersistentDataContainer().getOrDefault(battleItemKey, PersistentDataType.STRING, "");
     }
 
+    public boolean isSpleefShovel(ItemStack item) {
+        if (item == null || item.getType().isAir()) {
+            return false;
+        }
+        if (item.hasItemMeta()) {
+            ItemMeta meta = item.getItemMeta();
+            if (meta != null
+                    && CATEGORY_SHOVELS.equals(meta.getPersistentDataContainer().getOrDefault(cosmeticCategoryKey, PersistentDataType.STRING, ""))
+                    && !meta.getPersistentDataContainer().getOrDefault(cosmeticIdKey, PersistentDataType.STRING, "").isBlank()) {
+                return true;
+            }
+        }
+        Material material = item.getType();
+        if (material.name().endsWith("_SHOVEL")) {
+            return true;
+        }
+        for (CosmeticDefinition definition : cosmetics(CATEGORY_SHOVELS).values()) {
+            if (definition.material() == material) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public ItemStack cosmeticItem(CosmeticDefinition definition, boolean owned, boolean equipped) {
         ItemStack item = owned ? cosmeticStack(definition) : new ItemStack(Material.BARRIER);
         ItemMeta meta = item.getItemMeta();
@@ -232,6 +256,10 @@ public final class ContentRegistry {
         if (meta != null) {
             meta.setDisplayName(Chat.color(definition == null ? "&fSpleef Shovel" : definition.name()));
             meta.setUnbreakable(true);
+            if (definition != null) {
+                meta.getPersistentDataContainer().set(cosmeticCategoryKey, PersistentDataType.STRING, definition.category());
+                meta.getPersistentDataContainer().set(cosmeticIdKey, PersistentDataType.STRING, definition.id());
+            }
             meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_UNBREAKABLE);
             shovel.setItemMeta(meta);
         }
