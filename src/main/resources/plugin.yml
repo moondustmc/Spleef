@@ -1,0 +1,24 @@
+name: Spleef
+version: '${version}'
+
+main: com.moondust.spleef.Spleef
+api-version: '1.21'
+softdepend: [Citizens]
+commands:
+  spleef:
+    description: Main Spleef command.
+    usage: /spleef <join|leave|stats|cosmetics|battleitems|admin>
+    aliases: [sp]
+  stats:
+    description: Shows your Spleef stats.
+    usage: /stats
+  battleitems:
+    description: Opens your Spleef BattleItems menu.
+    usage: /battleitems
+permissions:
+  spleef.admin:
+    description: Allows Spleef setup and admin commands.
+    default: op
+  spleef.play:
+    description: Allows players to join Spleef.
+    default: true

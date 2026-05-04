@@ -1,0 +1,663 @@
+config-version: 3
+
+settings:
+  min-players: 2
+  countdown-seconds: 15
+  restart-delay-seconds: 8
+  snow-block: SNOW_BLOCK
+  death-trigger-block: WATER
+  require-shovel: true
+  afk-kick-seconds: 45
+  participation-coins: 5
+  win-coins: 25
+  map-rotation-seconds: 1800
+  first-join-spawn: true
+  cosmetics-menu-item:
+    enabled: true
+    slot: 8
+    material: CHEST
+    name: "&bCosmetics"
+  online-reward:
+    enabled: true
+    seconds: 600
+    coins: 2
+  must-mine:
+    enabled: true
+    intervals:
+      - after-seconds: 90
+        break-every-seconds: 15
+      - after-seconds: 150
+        break-every-seconds: 10
+      - after-seconds: 210
+        break-every-seconds: 6
+
+coin-multipliers:
+  global: 1.0
+  permissions:
+    vip: 1.25
+    premium: 1.5
+
+scoreboard:
+  enabled: true
+  title: "&b&lSpleef"
+  lines:
+    - "&7Global coin multiplier: &f{global_multiplier}x"
+    - "&7Your total multiplier: &f{total_multiplier}x"
+    - "&7Wins: &f{wins}"
+    - "&7Win streak: &f{streak}"
+    - "&7Coins: &f{coins}"
+
+maps:
+  default:
+    name: "Default"
+    world: "world"
+    spawn:
+      x: 0.5
+      y: 80.0
+      z: 0.5
+      yaw: 0.0
+      pitch: 0.0
+    lobby:
+      x: 0.5
+      y: 80.0
+      z: 0.5
+      yaw: 0.0
+      pitch: 0.0
+    arena:
+      pos1:
+        x: -10
+        y: 75
+        z: -10
+      pos2:
+        x: 10
+        y: 75
+        z: 10
+    snow-level:
+      pos1:
+        x: -10
+        y: 75
+        z: -10
+      pos2:
+        x: 10
+        y: 75
+        z: 10
+
+leaderboards:
+  hologram:
+    enabled: false
+    title: "&b&lSpleef Wins"
+    location: null
+    lines: 10
+  signs: []
+
+signs:
+  join: []
+  shops: []
+
+npc-shops:
+  citizens: {}
+
+shops:
+  particles:
+    title: "Chest"
+    items:
+      emerald:
+        type: cosmetic
+        category: player_particles
+        item: emerald
+        price: 75
+        free-once: false
+      snow:
+        type: cosmetic
+        category: player_particles
+        item: snow
+        price: 75
+        free-once: false
+      lava:
+        type: cosmetic
+        category: player_particles
+        item: lava
+        price: 100
+        free-once: false
+      slime:
+        type: cosmetic
+        category: player_particles
+        item: slime
+        price: 100
+        free-once: false
+      bling:
+        type: cosmetic
+        category: player_particles
+        item: bling
+        price: 150
+        free-once: false
+      smoke:
+        type: cosmetic
+        category: player_particles
+        item: smoke
+        price: 100
+        free-once: false
+      enchant:
+        type: cosmetic
+        category: player_particles
+        item: enchant
+        price: 125
+        free-once: false
+      waterdrip:
+        type: cosmetic
+        category: player_particles
+        item: waterdrip
+        price: 100
+        free-once: false
+      fire:
+        type: cosmetic
+        category: player_particles
+        item: fire
+        price: 100
+        free-once: false
+      cloud:
+        type: cosmetic
+        category: player_particles
+        item: cloud
+        price: 100
+        free-once: false
+      happyvillager:
+        type: cosmetic
+        category: player_particles
+        item: happyvillager
+        price: 125
+        free-once: false
+      crit:
+        type: cosmetic
+        category: player_particles
+        item: crit
+        price: 125
+        free-once: false
+      note:
+        type: cosmetic
+        category: player_particles
+        item: note
+        price: 125
+        free-once: false
+      flame:
+        type: cosmetic
+        category: player_particles
+        item: flame
+        price: 125
+        free-once: false
+      dragonbreath:
+        type: cosmetic
+        category: player_particles
+        item: dragonbreath
+        price: 175
+        free-once: false
+  shovels:
+    title: "Chest"
+    items:
+      stone:
+        type: cosmetic
+        category: shovels
+        item: stone
+        price: 50
+        free-once: false
+      copper:
+        type: cosmetic
+        category: shovels
+        item: copper
+        price: 75
+        free-once: false
+      iron:
+        type: cosmetic
+        category: shovels
+        item: iron
+        price: 100
+        free-once: false
+      diamond:
+        type: cosmetic
+        category: shovels
+        item: diamond
+        price: 150
+        free-once: false
+      golden:
+        type: cosmetic
+        category: shovels
+        item: golden
+        price: 100
+        free-once: false
+      gold_enchanted:
+        type: cosmetic
+        category: shovels
+        item: gold_enchanted
+        price: 150
+        free-once: false
+      diamond_enchanted:
+        type: cosmetic
+        category: shovels
+        item: diamond_enchanted
+        price: 225
+        free-once: false
+  clothes:
+    title: "Chest"
+    items:
+      blue_leather_hat:
+        type: cosmetic
+        category: gear
+        item: blue_leather_hat
+        price: 100
+        free-once: false
+      red_leather_chestplate:
+        type: cosmetic
+        category: gear
+        item: red_leather_chestplate
+        price: 125
+        free-once: false
+      blue_leather_pants:
+        type: cosmetic
+        category: gear
+        item: blue_leather_pants
+        price: 125
+        free-once: false
+      blue_leather_chestplate:
+        type: cosmetic
+        category: gear
+        item: blue_leather_chestplate
+        price: 125
+        free-once: false
+      iron_boots:
+        type: cosmetic
+        category: gear
+        item: iron_boots
+        price: 125
+        free-once: false
+      gold_boots:
+        type: cosmetic
+        category: gear
+        item: gold_boots
+        price: 150
+        free-once: false
+      diamond_boots:
+        type: cosmetic
+        category: gear
+        item: diamond_boots
+        price: 150
+        free-once: false
+      leather_hat:
+        type: cosmetic
+        category: gear
+        item: leather_hat
+        price: 75
+        free-once: false
+      diamond_pants:
+        type: cosmetic
+        category: gear
+        item: diamond_pants
+        price: 200
+        free-once: false
+      chainmail_helmet:
+        type: cosmetic
+        category: gear
+        item: chainmail_helmet
+        price: 125
+        free-once: false
+      chainmail_boots:
+        type: cosmetic
+        category: gear
+        item: chainmail_boots
+        price: 125
+        free-once: false
+      dark_blue_pants:
+        type: cosmetic
+        category: gear
+        item: dark_blue_pants
+        price: 125
+        free-once: false
+      ice_block:
+        type: cosmetic
+        category: gear
+        item: ice_block
+        price: 150
+        free-once: false
+  break_particles:
+    title: "Chest"
+    items:
+      snow:
+        type: cosmetic
+        category: block_break_particles
+        item: snow
+        price: 75
+        free-once: false
+      lava_drip:
+        type: cosmetic
+        category: block_break_particles
+        item: lava_drip
+        price: 100
+        free-once: false
+      witch:
+        type: cosmetic
+        category: block_break_particles
+        item: witch
+        price: 125
+        free-once: false
+      honey_drip:
+        type: cosmetic
+        category: block_break_particles
+        item: honey_drip
+        price: 125
+        free-once: false
+      slime_drip:
+        type: cosmetic
+        category: block_break_particles
+        item: slime_drip
+        price: 125
+        free-once: false
+      redstone:
+        type: cosmetic
+        category: block_break_particles
+        item: redstone
+        price: 125
+        free-once: false
+      emerald:
+        type: cosmetic
+        category: block_break_particles
+        item: emerald
+        price: 150
+        free-once: false
+
+battle-items:
+  snowball:
+    name: "&fSnowball"
+    material: SNOWBALL
+    action: SNOWBALL
+    radius: 0
+  snow_boulder:
+    name: "&bSnowBoulder"
+    material: SNOW_BLOCK
+    action: SNOWBALL
+    radius: 2
+  snowball_bucket:
+    name: "&fSnowball Bucket"
+    material: POWDER_SNOW_BUCKET
+    action: BUCKET
+    projectile-count: 4
+    radius: 0
+  coffee:
+    name: "&6Coffee"
+    material: RABBIT_STEW
+    action: COFFEE
+    speed-amplifier: 1
+    duration-seconds: 8
+  coffee_2:
+    name: "&eCoffee 2"
+    material: HONEY_BOTTLE
+    action: COFFEE
+    speed-amplifier: 2
+    duration-seconds: 8
+  snow_bomb:
+    name: "&cSnow-Bomb"
+    material: FIRE_CHARGE
+    action: BOMB
+    radius: 5
+    fuse-seconds: 3
+
+cosmetics:
+  shovels:
+    default:
+      name: "&fDefault Shovel"
+      material: WOODEN_SHOVEL
+      unlocked-by-default: true
+    stone:
+      name: "&7Stone Shovel"
+      material: STONE_SHOVEL
+      unlocked-by-default: false
+    copper:
+      name: "&6Copper Shovel"
+      material: COPPER_SHOVEL
+      unlocked-by-default: false
+    iron:
+      name: "&fIron Shovel"
+      material: IRON_SHOVEL
+      unlocked-by-default: false
+    diamond:
+      name: "&bDiamond Shovel"
+      material: DIAMOND_SHOVEL
+      unlocked-by-default: false
+    diamond_enchanted:
+      name: "&bEnchanted Diamond Shovel"
+      material: DIAMOND_SHOVEL
+      enchanted: true
+      unlocked-by-default: false
+    golden:
+      name: "&eGolden Shovel"
+      material: GOLDEN_SHOVEL
+      unlocked-by-default: false
+    gold_enchanted:
+      name: "&eEnchanted Gold Shovel"
+      material: GOLDEN_SHOVEL
+      enchanted: true
+      unlocked-by-default: false
+  player_particles:
+    emerald:
+      name: "&aEmerald Player Particle"
+      material: EMERALD
+      particle: HAPPY_VILLAGER
+      unlocked-by-default: true
+    snow:
+      name: "&fSnow Player Particle"
+      material: SNOWBALL
+      particle: SNOWFLAKE
+      unlocked-by-default: false
+    lava:
+      name: "&6Lava Player Particle"
+      material: LAVA_BUCKET
+      particle: DRIPPING_LAVA
+      unlocked-by-default: false
+    slime:
+      name: "&aSlime Player Particle"
+      material: SLIME_BALL
+      particle: ITEM_SLIME
+      unlocked-by-default: false
+    bling:
+      name: "&aBling Player Particle"
+      material: EMERALD
+      particle: ITEM
+      particle-material: EMERALD
+      unlocked-by-default: false
+    smoke:
+      name: "&8Smoke Player Particle"
+      material: CAMPFIRE
+      particle: SMOKE
+      unlocked-by-default: false
+    enchant:
+      name: "&dEnchant Player Particle"
+      material: ENCHANTED_BOOK
+      particle: ENCHANT
+      unlocked-by-default: false
+    waterdrip:
+      name: "&bWater Drip Player Particle"
+      material: WATER_BUCKET
+      particle: DRIPPING_WATER
+      unlocked-by-default: false
+    fire:
+      name: "&cFire Player Particle"
+      material: FIRE_CHARGE
+      particle: SMALL_FLAME
+      unlocked-by-default: false
+    cloud:
+      name: "&fCloud Player Particle"
+      material: WHITE_WOOL
+      particle: CLOUD
+      unlocked-by-default: false
+    happyvillager:
+      name: "&aHappy Villager Player Particle"
+      material: SUNFLOWER
+      particle: HAPPY_VILLAGER
+      unlocked-by-default: false
+    crit:
+      name: "&fCrit Player Particle"
+      material: IRON_SWORD
+      particle: CRIT
+      unlocked-by-default: false
+    note:
+      name: "&dNote Player Particle"
+      material: NOTE_BLOCK
+      particle: NOTE
+      unlocked-by-default: false
+    flame:
+      name: "&6Flame Player Particle"
+      material: BLAZE_POWDER
+      particle: FLAME
+      unlocked-by-default: false
+    dragonbreath:
+      name: "&5Dragon Breath Player Particle"
+      material: DRAGON_BREATH
+      particle: DRAGON_BREATH
+      unlocked-by-default: false
+  block_break_particles:
+    snow:
+      name: "&fSnow Block-Break Particle"
+      material: SNOWBALL
+      particle: SNOWFLAKE
+      unlocked-by-default: true
+    lava_drip:
+      name: "&6Lava Drip Block-Break Particle"
+      material: LAVA_BUCKET
+      particle: DRIPPING_LAVA
+      unlocked-by-default: false
+    witch:
+      name: "&dWitch Block-Break Particle"
+      material: POTION
+      particle: WITCH
+      unlocked-by-default: false
+    honey_drip:
+      name: "&6Honey Drip Block-Break Particle"
+      material: HONEY_BOTTLE
+      particle: DRIPPING_HONEY
+      unlocked-by-default: false
+    slime_drip:
+      name: "&aSlime Drip Block-Break Particle"
+      material: SLIME_BALL
+      particle: ITEM_SLIME
+      unlocked-by-default: false
+    redstone:
+      name: "&cRedstone Block-Break Particle"
+      material: REDSTONE
+      particle: DUST
+      color: "#ff0000"
+      unlocked-by-default: false
+    emerald:
+      name: "&aEmerald Block-Break Particle"
+      material: EMERALD
+      particle: ITEM
+      particle-material: EMERALD
+      unlocked-by-default: false
+  gear:
+    leather_cap:
+      name: "&6Leather Cap"
+      material: LEATHER_HELMET
+      slot: HEAD
+      unlocked-by-default: true
+    blue_leather_hat:
+      name: "&9Blue Leather Hat"
+      material: LEATHER_HELMET
+      color: "#3366ff"
+      slot: HEAD
+      unlocked-by-default: false
+    red_leather_chestplate:
+      name: "&cRed Leather Chestplate"
+      material: LEATHER_CHESTPLATE
+      color: "#cc2222"
+      slot: CHEST
+      unlocked-by-default: false
+    blue_leather_pants:
+      name: "&9Blue Leather Pants"
+      material: LEATHER_LEGGINGS
+      color: "#3366ff"
+      slot: LEGS
+      unlocked-by-default: false
+    blue_leather_chestplate:
+      name: "&9Blue Leather Chestplate"
+      material: LEATHER_CHESTPLATE
+      color: "#3366ff"
+      slot: CHEST
+      unlocked-by-default: false
+    iron_boots:
+      name: "&fIron Boots"
+      material: IRON_BOOTS
+      slot: FEET
+      unlocked-by-default: false
+    gold_boots:
+      name: "&eGold Boots"
+      material: GOLDEN_BOOTS
+      slot: FEET
+      unlocked-by-default: false
+    diamond_boots:
+      name: "&bDiamond Boots"
+      material: DIAMOND_BOOTS
+      slot: FEET
+      unlocked-by-default: false
+    leather_hat:
+      name: "&fLeather Hat"
+      material: LEATHER_HELMET
+      slot: HEAD
+      unlocked-by-default: false
+    diamond_pants:
+      name: "&bDiamond Pants"
+      material: DIAMOND_LEGGINGS
+      slot: LEGS
+      unlocked-by-default: false
+    chainmail_helmet:
+      name: "&7Chainmail Helmet"
+      material: CHAINMAIL_HELMET
+      slot: HEAD
+      unlocked-by-default: false
+    chainmail_boots:
+      name: "&7Chainmail Boots"
+      material: CHAINMAIL_BOOTS
+      slot: FEET
+      unlocked-by-default: false
+    dark_blue_pants:
+      name: "&1Dark Blue Pants"
+      material: LEATHER_LEGGINGS
+      color: "#00008b"
+      slot: LEGS
+      unlocked-by-default: false
+    ice_block:
+      name: "&bIce Block"
+      material: ICE
+      slot: HEAD
+      unlocked-by-default: false
+
+messages:
+  prefix: "&b[Spleef]&r "
+  join: "&aYou joined the queue."
+  leave: "&eYou left the queue."
+  already-in-queue: "&eYou are already in the Spleef queue."
+  not-in-queue: "&eYou are not in the Spleef queue."
+  no-permission: "&cYou do not have permission."
+  arena-not-ready: "&cSpleef is not configured yet."
+  need-player: "&cOnly players can use this command."
+  starting: "&eA new game is starting in &f{seconds}&e seconds."
+  countdown: "&eSpleef starts in &f{seconds}&e..."
+  game-started: "&aGo! Break the snow."
+  win: "&f{player} &awon Spleef!"
+  streak: "&f{player} &ais on a &f{streak}&a win streak!"
+  lost: "&cYou fell out of Spleef."
+  afk-kick: "&cYou stood still too long and were removed from Spleef."
+  must-mine-enabled: "&cMust-Mine is active. Break a snow block every &f{seconds}&c seconds."
+  must-mine-loss: "&cYou did not break snow quickly enough."
+  coins-gained: "&a+{coins} coins."
+  stats: "&bWins: &f{wins} &7| &bStreak: &f{streak} &7| &bCoins: &f{coins}"
+  battle-item-received: "&aYou received a &f{item}&a. Equip it from your Battle Items menu."
+  battle-item-used: "&aYou used a &f{item}&a!"
+  cosmetic-received: "&aYou received a &f{cosmetic}&a! Equip it from your Cosmetics menu."
+  cosmetic-already-owned: "&eYou already own that cosmetic."
+  cosmetic-equipped: "&aEquipped &f{cosmetic}&a."
+  cosmetic-locked: "&cYou do not own that cosmetic."
+  not-enough-coins: "&cYou need &f{coins}&c coins for that."
+  shop-claimed: "&eYou already claimed that reward."
+  purchase-complete: "&aPurchase complete."
+  map-rotate-in: "&eThe map will rotate in &f{time}&e."
+  map-rotate-after: "&eThe map will rotate at the end of the current Spleef match."
+  welcome-map: "&bWelcome to &f{map}&b."
+  booster: "&f{player} &aactivated a server &f{multiplier}x&a booster for Spleef!"
+  setup-saved: "&aSpleef setup saved."
