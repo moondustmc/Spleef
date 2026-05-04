@@ -83,7 +83,7 @@ public final class BattleItemService implements Listener {
         return available;
     }
 
-    @EventHandler(priority = EventPriority.HIGH, ignoreCancelled = true)
+    @EventHandler(priority = EventPriority.HIGH)
     public void onUse(PlayerInteractEvent event) {
         if (event.getHand() != EquipmentSlot.HAND) {
             return;
@@ -116,6 +116,9 @@ public final class BattleItemService implements Listener {
             return;
         }
         Location location = event.getHitBlock() == null ? event.getEntity().getLocation() : event.getHitBlock().getLocation().add(0.5, 0.5, 0.5);
+        if (event.getHitEntity() instanceof Player hitPlayer && gameManager.isActive(hitPlayer)) {
+            location = hitPlayer.getLocation().subtract(0.0, 1.0, 0.0);
+        }
         String action = definition.action().toUpperCase(Locale.ROOT);
         if (action.equals("BOMB")) {
             spawnBomb(location, definition);
@@ -143,7 +146,7 @@ public final class BattleItemService implements Listener {
             case "BOMB" -> launchTaggedSnowball(player, definition);
             default -> launchTaggedSnowball(player, definition);
         }
-        plugin.message(player, "messages.battle-item-used", Map.of("{item}", registry.battleItemDisplayName(id)));
+        plugin.actionBar(player, "messages.battle-item-used", Map.of("{item}", registry.battleItemDisplayName(id)));
     }
 
     private void useCoffee(Player player, BattleItemDefinition definition) {

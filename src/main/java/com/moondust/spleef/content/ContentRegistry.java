@@ -73,7 +73,8 @@ public final class ContentRegistry {
                     itemSection.getInt("projectile-count", 1),
                     itemSection.getInt("fuse-seconds", 3),
                     itemSection.getInt("speed-amplifier", 1),
-                    itemSection.getInt("duration-seconds", 8)
+                    itemSection.getInt("duration-seconds", 8),
+                    maxStackSize(itemSection.getInt("max-stack-size", 0))
             );
             battleItems.put(id, definition);
         }
@@ -171,16 +172,27 @@ public final class ContentRegistry {
         if (definition == null) {
             return null;
         }
-        ItemStack item = new ItemStack(definition.material(), Math.max(1, amount));
+        ItemStack item = new ItemStack(definition.material(), stackAmount(definition, amount));
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
             meta.setDisplayName(Chat.color(definition.name()));
             meta.setLore(List.of(Chat.color("&7Battle Item"), Chat.color("&8" + id)));
             meta.getPersistentDataContainer().set(battleItemKey, PersistentDataType.STRING, id);
+            if (definition.maxStackSize() > 0) {
+                meta.setMaxStackSize(definition.maxStackSize());
+            }
             meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES);
             item.setItemMeta(meta);
         }
         return item;
+    }
+
+    private int stackAmount(BattleItemDefinition definition, int amount) {
+        int stackAmount = Math.max(1, amount);
+        if (definition.maxStackSize() > 0) {
+            return Math.min(stackAmount, definition.maxStackSize());
+        }
+        return stackAmount;
     }
 
     public String battleItemId(ItemStack item) {
@@ -369,6 +381,13 @@ public final class ContentRegistry {
         }
         Material material = Material.matchMaterial(value);
         return material == null ? fallback : material;
+    }
+
+    private int maxStackSize(int value) {
+        if (value <= 0) {
+            return 0;
+        }
+        return Math.max(1, Math.min(99, value));
     }
 
     private CosmeticDefinition firstCosmetic(String category) {

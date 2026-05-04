@@ -33,6 +33,8 @@ import java.util.UUID;
 public final class MenuManager implements Listener {
     private static final String COSMETICS_TITLE = "Cosmetics";
     private static final String BATTLE_TITLE = "BattleItems";
+    private static final String OPEN_COSMETICS_ACTION = "open_cosmetics";
+    private static final String OPEN_BATTLE_ITEMS_ACTION = "open_battleitems";
     private static final int[] COSMETIC_SLOTS = {10, 11, 12, 13, 14, 15, 16, 19, 20, 21, 22, 23, 24, 25};
     private static final int[] COMPACT_CATEGORY_SLOTS = {12, 13, 14, 15, 16};
     private static final int EQUIPPED_COMPACT_SLOT = 10;
@@ -204,16 +206,16 @@ public final class MenuManager implements Listener {
             return;
         }
         String action = menuAction(event.getItem());
-        if (!action.equals("open_cosmetics")) {
+        if (!isInventoryMenuAction(action)) {
             return;
         }
         event.setCancelled(true);
-        openCosmetics(event.getPlayer());
+        openInventoryMenu(event.getPlayer(), action);
     }
 
     @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
     public void onDrop(PlayerDropItemEvent event) {
-        if (menuAction(event.getItemDrop().getItemStack()).equals("open_cosmetics")) {
+        if (isInventoryMenuAction(menuAction(event.getItemDrop().getItemStack()))) {
             event.setCancelled(true);
         }
     }
@@ -225,9 +227,9 @@ public final class MenuManager implements Listener {
         }
         String title = event.getView().getTitle();
         String action = menuAction(event.getCurrentItem());
-        if (action.equals("open_cosmetics") && event.getClickedInventory() == player.getInventory()) {
+        if (isInventoryMenuAction(action) && event.getClickedInventory() == player.getInventory()) {
             event.setCancelled(true);
-            openCosmetics(player);
+            openInventoryMenu(player, action);
             return;
         }
         if (!isManagedTitle(title)) {
@@ -304,7 +306,7 @@ public final class MenuManager implements Listener {
     }
 
     private void handleCategoryClick(Player player, ItemStack item, String action) {
-        if (action.equals("open_cosmetics")) {
+        if (action.equals(OPEN_COSMETICS_ACTION)) {
             openCosmetics(player);
             return;
         }
@@ -700,6 +702,18 @@ public final class MenuManager implements Listener {
             return "";
         }
         return meta.getPersistentDataContainer().getOrDefault(registry.menuActionKey(), PersistentDataType.STRING, "");
+    }
+
+    private boolean isInventoryMenuAction(String action) {
+        return action.equals(OPEN_COSMETICS_ACTION) || action.equals(OPEN_BATTLE_ITEMS_ACTION);
+    }
+
+    private void openInventoryMenu(Player player, String action) {
+        if (action.equals(OPEN_COSMETICS_ACTION)) {
+            openCosmetics(player);
+        } else if (action.equals(OPEN_BATTLE_ITEMS_ACTION)) {
+            openBattleItems(player);
+        }
     }
 
     private record CategoryView(String category, int page) {

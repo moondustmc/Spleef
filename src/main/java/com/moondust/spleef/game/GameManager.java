@@ -166,7 +166,7 @@ public final class GameManager implements Listener {
         }
         queue.add(player.getUniqueId());
         dataManager.get(player);
-        giveCosmeticsMenuItem(player);
+        giveMenuItems(player);
         plugin.message(player, "messages.join");
         updateScoreboard(player);
         tryStart();
@@ -225,7 +225,7 @@ public final class GameManager implements Listener {
             if (!isActive(player) && map.lobby() != null) {
                 player.teleport(map.lobby());
                 plugin.message(player, "messages.welcome-map", Map.of("{map}", map.displayName()));
-                giveCosmeticsMenuItem(player);
+                giveMenuItems(player);
             }
         }
     }
@@ -288,23 +288,45 @@ public final class GameManager implements Listener {
         return broken;
     }
 
+    public void giveMenuItems(Player player) {
+        if (isActive(player)) {
+            return;
+        }
+        giveCosmeticsMenuItem(player);
+        giveBattleItemsMenuItem(player);
+    }
+
     public void giveCosmeticsMenuItem(Player player) {
-        if (!plugin.getConfig().getBoolean("settings.cosmetics-menu-item.enabled", true) || isActive(player)) {
-            return;
-        }
-        int slot = plugin.getConfig().getInt("settings.cosmetics-menu-item.slot", 8);
-        if (slot < 0 || slot > 35) {
-            return;
-        }
-        Material material = registry.material(plugin.getConfig().getString("settings.cosmetics-menu-item.material"), Material.CHEST);
-        String name = plugin.getConfig().getString("settings.cosmetics-menu-item.name", "&bCosmetics");
-        player.getInventory().setItem(slot, registry.menuAction("open_cosmetics", material, name));
+        giveMenuItem(player, "settings.cosmetics-menu-item", "open_cosmetics", Material.CHEST, "&bCosmetics");
+    }
+
+    public void giveBattleItemsMenuItem(Player player) {
+        giveMenuItem(player, "settings.battleitems-menu-item", "open_battleitems", Material.MAGMA_CREAM, "&cBattle Items");
     }
 
     public ItemStack createCosmeticsMenuItem() {
-        Material material = registry.material(plugin.getConfig().getString("settings.cosmetics-menu-item.material"), Material.CHEST);
-        String name = plugin.getConfig().getString("settings.cosmetics-menu-item.name", "&bCosmetics");
-        return registry.menuAction("open_cosmetics", material, name);
+        return createMenuItem("settings.cosmetics-menu-item", "open_cosmetics", Material.CHEST, "&bCosmetics");
+    }
+
+    public ItemStack createBattleItemsMenuItem() {
+        return createMenuItem("settings.battleitems-menu-item", "open_battleitems", Material.MAGMA_CREAM, "&cBattle Items");
+    }
+
+    private void giveMenuItem(Player player, String path, String action, Material fallbackMaterial, String fallbackName) {
+        if (!plugin.getConfig().getBoolean(path + ".enabled", true) || isActive(player)) {
+            return;
+        }
+        int slot = plugin.getConfig().getInt(path + ".slot", 8);
+        if (slot < 0 || slot > 35) {
+            return;
+        }
+        player.getInventory().setItem(slot, createMenuItem(path, action, fallbackMaterial, fallbackName));
+    }
+
+    private ItemStack createMenuItem(String path, String action, Material fallbackMaterial, String fallbackName) {
+        Material material = registry.material(plugin.getConfig().getString(path + ".material"), fallbackMaterial);
+        String name = plugin.getConfig().getString(path + ".name", fallbackName);
+        return registry.menuAction(action, material, name);
     }
 
     private void tick() {
@@ -386,7 +408,7 @@ public final class GameManager implements Listener {
             restoreSession(player, true);
             doubleJumpsRemaining.remove(player.getUniqueId());
             updateScoreboard(player);
-            giveCosmeticsMenuItem(player);
+            giveMenuItems(player);
         }
         activePlayers.clear();
         state = GameState.WAITING;
@@ -442,7 +464,7 @@ public final class GameManager implements Listener {
         for (Player player : onlineActivePlayers()) {
             restoreSession(player, true);
             updateScoreboard(player);
-            giveCosmeticsMenuItem(player);
+            giveMenuItems(player);
         }
         activePlayers.clear();
         lastBreak.clear();
@@ -479,7 +501,7 @@ public final class GameManager implements Listener {
         }
         if (restoreNow) {
             restoreSession(player, true);
-            giveCosmeticsMenuItem(player);
+            giveMenuItems(player);
         }
         updateScoreboard(player);
         if (state == GameState.ACTIVE && activePlayers.size() <= 1) {
@@ -1037,11 +1059,11 @@ public final class GameManager implements Listener {
             Bukkit.getScheduler().runTask(plugin, () -> {
                 if (!isActive(event.getPlayer())) {
                     event.getPlayer().teleport(map.lobby());
-                    giveCosmeticsMenuItem(event.getPlayer());
+                    giveMenuItems(event.getPlayer());
                 }
             });
         } else {
-            Bukkit.getScheduler().runTask(plugin, () -> giveCosmeticsMenuItem(event.getPlayer()));
+            Bukkit.getScheduler().runTask(plugin, () -> giveMenuItems(event.getPlayer()));
         }
     }
 
@@ -1054,7 +1076,7 @@ public final class GameManager implements Listener {
         if (sessions.containsKey(event.getPlayer().getUniqueId())) {
             Bukkit.getScheduler().runTask(plugin, () -> {
                 restoreSession(event.getPlayer(), false);
-                giveCosmeticsMenuItem(event.getPlayer());
+                giveMenuItems(event.getPlayer());
             });
         }
     }

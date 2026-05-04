@@ -87,6 +87,9 @@ public final class ConfigUpdater {
         if (previousVersion < 9 && targetVersion >= 9) {
             changed += multiplyShopPrices(current, 4.0);
         }
+        if (previousVersion < 12 && targetVersion >= 12) {
+            changed += multiplyShopPrices(current.getConfigurationSection("shops.snowballer"), 0.5);
+        }
         return changed;
     }
 
@@ -99,6 +102,9 @@ public final class ConfigUpdater {
     }
 
     private int multiplyShopPrices(ConfigurationSection section, double multiplier) {
+        if (section == null) {
+            return 0;
+        }
         int changed = 0;
         for (String key : section.getKeys(false)) {
             ConfigurationSection child = section.getConfigurationSection(key);

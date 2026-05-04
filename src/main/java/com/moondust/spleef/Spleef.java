@@ -14,6 +14,8 @@ import com.moondust.spleef.shop.CitizensShopService;
 import com.moondust.spleef.shop.NpcShopService;
 import com.moondust.spleef.shop.ShopService;
 import com.moondust.spleef.util.Chat;
+import net.md_5.bungee.api.ChatMessageType;
+import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.PluginCommand;
@@ -110,12 +112,23 @@ public final class Spleef extends JavaPlugin {
     }
 
     public void messageText(CommandSender sender, String text, Map<String, String> replacements) {
+        String rendered = renderMessage(text, replacements);
+        String prefix = getConfig().getString("messages.prefix", "");
+        sender.sendMessage(Chat.color(prefix + rendered));
+    }
+
+    public void actionBar(Player player, String path, Map<String, String> replacements) {
+        String fallback = path;
+        String text = getConfig().getString(path, fallback);
+        player.spigot().sendMessage(ChatMessageType.ACTION_BAR, TextComponent.fromLegacyText(Chat.color(renderMessage(text, replacements))));
+    }
+
+    private String renderMessage(String text, Map<String, String> replacements) {
         String rendered = text == null ? "" : text;
         for (Map.Entry<String, String> entry : replacements.entrySet()) {
             rendered = rendered.replace(entry.getKey(), entry.getValue());
         }
-        String prefix = getConfig().getString("messages.prefix", "");
-        sender.sendMessage(Chat.color(prefix + rendered));
+        return rendered;
     }
 
     public ConfigUpdater.UpdateResult updateConfigFromDefaults() {

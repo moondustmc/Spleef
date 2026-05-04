@@ -1,4 +1,4 @@
-config-version: 9
+config-version: 13
 
 settings:
   min-players: 2
@@ -38,6 +38,11 @@ settings:
     slot: 8
     material: CHEST
     name: "&bCosmetics"
+  battleitems-menu-item:
+    enabled: true
+    slot: 7
+    material: MAGMA_CREAM
+    name: "&cBattle Items"
   online-reward:
     enabled: true
     seconds: 600
@@ -383,6 +388,26 @@ shops:
         item: emerald
         price: 600
         free-once: false
+  snowballer:
+    title: "&bSnowballer Shop"
+    items:
+      snowballs:
+        type: battle
+        item: snowball
+        amount: 8
+        price: 20
+        free-once: false
+        name: "&fSnowballs"
+      snowball_bucket:
+        type: battle
+        item: snowball_bucket
+        price: 37.5
+        free-once: false
+      snow_boulder:
+        type: battle
+        item: snow_boulder
+        price: 50
+        free-once: false
 
 battle-items:
   snowball:
@@ -395,6 +420,7 @@ battle-items:
     material: SNOW_BLOCK
     action: SNOWBALL
     radius: 2
+    max-stack-size: 1
   snowball_bucket:
     name: "&fSnowball Bucket"
     material: POWDER_SNOW_BUCKET

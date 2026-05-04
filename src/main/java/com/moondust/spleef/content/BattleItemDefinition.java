@@ -11,6 +11,7 @@ public record BattleItemDefinition(
         int projectileCount,
         int fuseSeconds,
         int speedAmplifier,
-        int durationSeconds
+        int durationSeconds,
+        int maxStackSize
 ) {
 }
