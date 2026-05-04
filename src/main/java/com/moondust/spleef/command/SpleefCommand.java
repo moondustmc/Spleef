@@ -246,7 +246,7 @@ public final class SpleefCommand implements CommandExecutor, TabCompleter {
             npcShopService.reload();
         }
         if (configUpdate.updated()) {
-            plugin.messageText(sender, "&aSpleef reloaded. Added &f" + configUpdate.addedPaths() + " &amissing config value(s).", Map.of());
+            plugin.messageText(sender, "&aSpleef reloaded. Applied &f" + configUpdate.addedPaths() + " &aconfig update(s).", Map.of());
         } else {
             plugin.messageText(sender, "&aSpleef reloaded.", Map.of());
         }

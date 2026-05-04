@@ -9,6 +9,7 @@ import com.moondust.spleef.util.Chat;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
+import org.bukkit.Sound;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -82,7 +83,7 @@ public final class ShopService implements Listener {
         int pages = Math.max(1, (int) Math.ceil(entries.size() / (double) SHOP_ITEM_SLOTS.length));
         int actualPage = Math.floorMod(page, pages);
         ShopInventoryHolder holder = new ShopInventoryHolder(shopId, actualPage);
-        Inventory inventory = Bukkit.createInventory(holder, 27, Chat.color(shop.getString("title", "Chest")));
+        Inventory inventory = Bukkit.createInventory(holder, 27, Chat.color(shop.getString("title", generatedTitle(shopId))));
         holder.inventory(inventory);
         decorate(inventory);
         int startIndex = actualPage * SHOP_ITEM_SLOTS.length;
@@ -136,6 +137,7 @@ public final class ShopService implements Listener {
         String entryId = meta.getPersistentDataContainer().getOrDefault(shopEntryKey, PersistentDataType.STRING, "");
         if (PAGE_ENTRY.equals(entryId)) {
             int page = meta.getPersistentDataContainer().getOrDefault(shopPageKey, PersistentDataType.INTEGER, 0);
+            playPageSound(player);
             openShop(player, shopId, page);
             return;
         }
@@ -196,6 +198,7 @@ public final class ShopService implements Listener {
         if (entry.price() > 0.0) {
             plugin.message(player, "messages.purchase-complete");
         }
+        playPurchaseSound(player);
         dataManager.save();
     }
 
@@ -268,6 +271,58 @@ public final class ShopService implements Listener {
             return registry.cosmeticDisplayName(entry.category(), entry.item());
         }
         return registry.battleItemDisplayName(entry.item());
+    }
+
+    private String generatedTitle(String shopId) {
+        String readable = shopId.replace('-', ' ').replace('_', ' ').trim();
+        if (readable.isBlank()) {
+            return "&bSpleef Shop";
+        }
+        StringBuilder title = new StringBuilder("&b");
+        for (String word : readable.split("\\s+")) {
+            if (word.isBlank()) {
+                continue;
+            }
+            if (title.length() > 2) {
+                title.append(' ');
+            }
+            title.append(Character.toUpperCase(word.charAt(0)));
+            if (word.length() > 1) {
+                title.append(word.substring(1).toLowerCase(Locale.ROOT));
+            }
+        }
+        title.append(" Shop");
+        return title.toString();
+    }
+
+    private void playPageSound(Player player) {
+        if (!plugin.getConfig().getBoolean("settings.shop-page-sound.enabled", true)) {
+            return;
+        }
+        String soundName = plugin.getConfig().getString("settings.shop-page-sound.sound", "BLOCK_BAMBOO_BREAK");
+        try {
+            Sound sound = Sound.valueOf(soundName == null ? "BLOCK_BAMBOO_BREAK" : soundName.toUpperCase(Locale.ROOT));
+            float volume = (float) plugin.getConfig().getDouble("settings.shop-page-sound.volume", 1.0);
+            float pitch = (float) plugin.getConfig().getDouble("settings.shop-page-sound.pitch", 1.0);
+            player.playSound(player.getLocation(), sound, volume, pitch);
+        } catch (IllegalArgumentException ignored) {
+            player.playSound(player.getLocation(), Sound.BLOCK_BAMBOO_BREAK, 1.0F, 1.0F);
+        }
+    }
+
+    private void playPurchaseSound(Player player) {
+        if (!plugin.getConfig().getBoolean("settings.shop-purchase-sound.enabled", true)) {
+            return;
+        }
+        String soundName = plugin.getConfig().getString("settings.shop-purchase-sound.sound", "BLOCK_AMETHYST_CLUSTER_PLACE");
+        try {
+            Sound sound = Sound.valueOf(soundName == null ? "BLOCK_AMETHYST_CLUSTER_PLACE" : soundName.toUpperCase(Locale.ROOT));
+            float volume = (float) plugin.getConfig().getDouble("settings.shop-purchase-sound.volume", 1.0);
+            float pitch = (float) plugin.getConfig().getDouble("settings.shop-purchase-sound.pitch", 1.0);
+            player.playSound(player.getLocation(), sound, volume, pitch);
+        } catch (IllegalArgumentException ignored) {
+            player.playSound(player.getLocation(), Sound.BLOCK_AMETHYST_CLUSTER_PLACE, 1.0F, 1.0F);
+        }
     }
 
     private ShopEntry entry(String shopId, String entryId) {

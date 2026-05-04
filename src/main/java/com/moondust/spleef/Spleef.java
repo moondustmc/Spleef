@@ -126,7 +126,7 @@ public final class Spleef extends JavaPlugin {
             ConfigUpdater.UpdateResult result = configUpdater.update();
             if (result.updated()) {
                 getLogger().info("Updated config.yml from version " + result.previousVersion() + " to " + result.targetVersion()
-                        + " and added " + result.addedPaths() + " missing path(s).");
+                        + " and applied " + result.addedPaths() + " config update(s).");
             }
             return result;
         } catch (IOException | RuntimeException exception) {

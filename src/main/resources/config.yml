@@ -1,4 +1,4 @@
-config-version: 3
+config-version: 9
 
 settings:
   min-players: 2
@@ -12,6 +12,27 @@ settings:
   win-coins: 25
   map-rotation-seconds: 1800
   first-join-spawn: true
+  double-jump:
+    enabled: true
+    multiplier: 0.5
+    height: 0.3
+    max-jumps: 3
+  celebration-fireworks:
+    enabled: true
+    count: 3
+    interval-ticks: 10
+    power: 1
+    color: "#6699d8"
+  shop-page-sound:
+    enabled: true
+    sound: BLOCK_BAMBOO_BREAK
+    volume: 1.0
+    pitch: 1.0
+  shop-purchase-sound:
+    enabled: true
+    sound: BLOCK_AMETHYST_CLUSTER_PLACE
+    volume: 1.0
+    pitch: 1.0
   cosmetics-menu-item:
     enabled: true
     slot: 8
@@ -99,268 +120,268 @@ npc-shops:
 
 shops:
   particles:
-    title: "Chest"
+    title: "&bParticles Shop"
     items:
       emerald:
         type: cosmetic
         category: player_particles
         item: emerald
-        price: 75
+        price: 300
         free-once: false
       snow:
         type: cosmetic
         category: player_particles
         item: snow
-        price: 75
+        price: 300
         free-once: false
       lava:
         type: cosmetic
         category: player_particles
         item: lava
-        price: 100
+        price: 400
         free-once: false
       slime:
         type: cosmetic
         category: player_particles
         item: slime
-        price: 100
+        price: 400
         free-once: false
       bling:
         type: cosmetic
         category: player_particles
         item: bling
-        price: 150
+        price: 600
         free-once: false
       smoke:
         type: cosmetic
         category: player_particles
         item: smoke
-        price: 100
+        price: 400
         free-once: false
       enchant:
         type: cosmetic
         category: player_particles
         item: enchant
-        price: 125
+        price: 500
         free-once: false
       waterdrip:
         type: cosmetic
         category: player_particles
         item: waterdrip
-        price: 100
+        price: 400
         free-once: false
       fire:
         type: cosmetic
         category: player_particles
         item: fire
-        price: 100
+        price: 400
         free-once: false
       cloud:
         type: cosmetic
         category: player_particles
         item: cloud
-        price: 100
+        price: 400
         free-once: false
       happyvillager:
         type: cosmetic
         category: player_particles
         item: happyvillager
-        price: 125
+        price: 500
         free-once: false
       crit:
         type: cosmetic
         category: player_particles
         item: crit
-        price: 125
+        price: 500
         free-once: false
       note:
         type: cosmetic
         category: player_particles
         item: note
-        price: 125
+        price: 500
         free-once: false
       flame:
         type: cosmetic
         category: player_particles
         item: flame
-        price: 125
+        price: 500
         free-once: false
       dragonbreath:
         type: cosmetic
         category: player_particles
         item: dragonbreath
-        price: 175
+        price: 700
         free-once: false
   shovels:
-    title: "Chest"
+    title: "&bShovels Shop"
     items:
       stone:
         type: cosmetic
         category: shovels
         item: stone
-        price: 50
+        price: 200
         free-once: false
       copper:
         type: cosmetic
         category: shovels
         item: copper
-        price: 75
+        price: 300
         free-once: false
       iron:
         type: cosmetic
         category: shovels
         item: iron
-        price: 100
+        price: 400
         free-once: false
       diamond:
         type: cosmetic
         category: shovels
         item: diamond
-        price: 150
+        price: 600
         free-once: false
       golden:
         type: cosmetic
         category: shovels
         item: golden
-        price: 100
+        price: 400
         free-once: false
       gold_enchanted:
         type: cosmetic
         category: shovels
         item: gold_enchanted
-        price: 150
+        price: 600
         free-once: false
       diamond_enchanted:
         type: cosmetic
         category: shovels
         item: diamond_enchanted
-        price: 225
+        price: 900
         free-once: false
   clothes:
-    title: "Chest"
+    title: "&bClothes Shop"
     items:
       blue_leather_hat:
         type: cosmetic
         category: gear
         item: blue_leather_hat
-        price: 100
+        price: 400
         free-once: false
       red_leather_chestplate:
         type: cosmetic
         category: gear
         item: red_leather_chestplate
-        price: 125
+        price: 500
         free-once: false
       blue_leather_pants:
         type: cosmetic
         category: gear
         item: blue_leather_pants
-        price: 125
+        price: 500
         free-once: false
       blue_leather_chestplate:
         type: cosmetic
         category: gear
         item: blue_leather_chestplate
-        price: 125
+        price: 500
         free-once: false
       iron_boots:
         type: cosmetic
         category: gear
         item: iron_boots
-        price: 125
+        price: 500
         free-once: false
       gold_boots:
         type: cosmetic
         category: gear
         item: gold_boots
-        price: 150
+        price: 600
         free-once: false
       diamond_boots:
         type: cosmetic
         category: gear
         item: diamond_boots
-        price: 150
+        price: 600
         free-once: false
       leather_hat:
         type: cosmetic
         category: gear
         item: leather_hat
-        price: 75
+        price: 300
         free-once: false
       diamond_pants:
         type: cosmetic
         category: gear
         item: diamond_pants
-        price: 200
+        price: 800
         free-once: false
       chainmail_helmet:
         type: cosmetic
         category: gear
         item: chainmail_helmet
-        price: 125
+        price: 500
         free-once: false
       chainmail_boots:
         type: cosmetic
         category: gear
         item: chainmail_boots
-        price: 125
+        price: 500
         free-once: false
       dark_blue_pants:
         type: cosmetic
         category: gear
         item: dark_blue_pants
-        price: 125
+        price: 500
         free-once: false
       ice_block:
         type: cosmetic
         category: gear
         item: ice_block
-        price: 150
+        price: 600
         free-once: false
   break_particles:
-    title: "Chest"
+    title: "&bBlock-Break Particles Shop"
     items:
       snow:
         type: cosmetic
         category: block_break_particles
         item: snow
-        price: 75
+        price: 300
         free-once: false
       lava_drip:
         type: cosmetic
         category: block_break_particles
         item: lava_drip
-        price: 100
+        price: 400
         free-once: false
       witch:
         type: cosmetic
         category: block_break_particles
         item: witch
-        price: 125
+        price: 500
         free-once: false
       honey_drip:
         type: cosmetic
         category: block_break_particles
         item: honey_drip
-        price: 125
+        price: 500
         free-once: false
       slime_drip:
         type: cosmetic
         category: block_break_particles
         item: slime_drip
-        price: 125
+        price: 500
         free-once: false
       redstone:
         type: cosmetic
         category: block_break_particles
         item: redstone
-        price: 125
+        price: 500
         free-once: false
       emerald:
         type: cosmetic
         category: block_break_particles
         item: emerald
-        price: 150
+        price: 600
         free-once: false
 
 battle-items:

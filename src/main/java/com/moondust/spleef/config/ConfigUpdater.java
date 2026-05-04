@@ -36,7 +36,8 @@ public final class ConfigUpdater {
             return new UpdateResult(0, previousVersion, targetVersion, false);
         }
 
-        int addedPaths = copyMissing(defaults, current);
+        int addedPaths = applyVersionMigrations(previousVersion, targetVersion, current);
+        addedPaths += copyMissing(defaults, current);
         current.set("config-version", targetVersion);
         current.save(configFile);
         return new UpdateResult(addedPaths, previousVersion, targetVersion, true);
@@ -79,6 +80,44 @@ public final class ConfigUpdater {
             }
         }
         return added;
+    }
+
+    private int applyVersionMigrations(int previousVersion, int targetVersion, YamlConfiguration current) {
+        int changed = 0;
+        if (previousVersion < 9 && targetVersion >= 9) {
+            changed += multiplyShopPrices(current, 4.0);
+        }
+        return changed;
+    }
+
+    private int multiplyShopPrices(YamlConfiguration current, double multiplier) {
+        ConfigurationSection shops = current.getConfigurationSection("shops");
+        if (shops == null) {
+            return 0;
+        }
+        return multiplyShopPrices(shops, multiplier);
+    }
+
+    private int multiplyShopPrices(ConfigurationSection section, double multiplier) {
+        int changed = 0;
+        for (String key : section.getKeys(false)) {
+            ConfigurationSection child = section.getConfigurationSection(key);
+            if (child != null) {
+                changed += multiplyShopPrices(child, multiplier);
+                continue;
+            }
+            Object value = section.get(key);
+            if (key.equals("price") && value instanceof Number number) {
+                double next = number.doubleValue() * multiplier;
+                if (Math.abs(next - Math.rint(next)) < 0.001) {
+                    section.set(key, (long) Math.round(next));
+                } else {
+                    section.set(key, next);
+                }
+                changed++;
+            }
+        }
+        return changed;
     }
 
     private String path(ConfigurationSection section, String key) {

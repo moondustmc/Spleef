@@ -219,7 +219,7 @@ public final class ContentRegistry {
     }
 
     public ItemStack cosmeticItem(CosmeticDefinition definition, boolean owned, boolean equipped) {
-        ItemStack item = owned ? cosmeticStack(definition) : new ItemStack(Material.BARRIER);
+        ItemStack item = cosmeticStack(definition);
         ItemMeta meta = item.getItemMeta();
         if (meta != null) {
             meta.setDisplayName(Chat.color(definition.name()));

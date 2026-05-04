@@ -10,6 +10,8 @@ import com.moondust.spleef.scoreboard.ScoreboardService;
 import com.moondust.spleef.util.Chat;
 import com.moondust.spleef.util.LocationCodec;
 import org.bukkit.Bukkit;
+import org.bukkit.Color;
+import org.bukkit.FireworkEffect;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -18,6 +20,7 @@ import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.entity.Firework;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -32,14 +35,17 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRespawnEvent;
+import org.bukkit.event.player.PlayerToggleFlightEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.block.Action;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.PlayerInventory;
+import org.bukkit.inventory.meta.FireworkMeta;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
+import org.bukkit.util.Vector;
 
 import java.io.File;
 import java.io.IOException;
@@ -63,6 +69,7 @@ public final class GameManager implements Listener {
     private final Map<UUID, Long> lastBreak = new HashMap<>();
     private final Map<UUID, Long> lastMove = new HashMap<>();
     private final Map<UUID, Location> lastMoveLocation = new HashMap<>();
+    private final Map<UUID, Integer> doubleJumpsRemaining = new HashMap<>();
     private final List<ArenaMap> maps = new ArrayList<>();
     private Material snowMaterial;
     private Material deathMaterial;
@@ -376,6 +383,7 @@ public final class GameManager implements Listener {
     private void abortCountdown() {
         for (Player player : onlineActivePlayers()) {
             restoreSession(player, true);
+            doubleJumpsRemaining.remove(player.getUniqueId());
             updateScoreboard(player);
             giveCosmeticsMenuItem(player);
         }
@@ -402,6 +410,7 @@ public final class GameManager implements Listener {
             lastBreak.put(player.getUniqueId(), now);
             lastMove.put(player.getUniqueId(), now);
             lastMoveLocation.put(player.getUniqueId(), player.getLocation().clone());
+            setupDoubleJumps(player);
             awardCoins(player, plugin.getConfig().getDouble("settings.participation-coins", 0.0));
             updateScoreboard(player);
         }
@@ -427,6 +436,7 @@ public final class GameManager implements Listener {
             if (winnerData.currentStreak() > 1) {
                 broadcast("messages.streak", Map.of("{player}", winner.getName(), "{streak}", Integer.toString(winnerData.currentStreak())));
             }
+            spawnCelebrationFireworks();
         }
         for (Player player : onlineActivePlayers()) {
             restoreSession(player, true);
@@ -437,6 +447,7 @@ public final class GameManager implements Listener {
         lastBreak.clear();
         lastMove.clear();
         lastMoveLocation.clear();
+        doubleJumpsRemaining.clear();
         regenerateArena();
         dataManager.save();
         int delay = Math.max(1, plugin.getConfig().getInt("settings.restart-delay-seconds", 8));
@@ -459,6 +470,7 @@ public final class GameManager implements Listener {
         if (!activePlayers.remove(player.getUniqueId())) {
             return;
         }
+        doubleJumpsRemaining.remove(player.getUniqueId());
         PlayerData data = dataManager.get(player);
         data.currentStreak(0);
         if (messagePath != null && !messagePath.isBlank()) {
@@ -489,6 +501,19 @@ public final class GameManager implements Listener {
         if (giveItems) {
             player.getInventory().setItem(0, registry.shovelFor(dataManager.get(player)));
         }
+    }
+
+    private void setupDoubleJumps(Player player) {
+        int maxJumps = doubleJumpMaxJumps();
+        if (!plugin.getConfig().getBoolean("settings.double-jump.enabled", true) || maxJumps <= 0) {
+            doubleJumpsRemaining.remove(player.getUniqueId());
+            player.setAllowFlight(false);
+            player.setFlying(false);
+            return;
+        }
+        doubleJumpsRemaining.put(player.getUniqueId(), maxJumps);
+        player.setAllowFlight(true);
+        player.setFlying(false);
     }
 
     private void saveSession(Player player) {
@@ -550,6 +575,73 @@ public final class GameManager implements Listener {
             if (location != null && location.getWorld() != null) {
                 location.getBlock().setType(snowMaterial, false);
             }
+        }
+    }
+
+    private void spawnCelebrationFireworks() {
+        if (!plugin.getConfig().getBoolean("settings.celebration-fireworks.enabled", true)) {
+            return;
+        }
+        ArenaMap map = currentMap();
+        if (map == null || map.spawn() == null || map.spawn().getWorld() == null) {
+            return;
+        }
+        int count = Math.max(1, plugin.getConfig().getInt("settings.celebration-fireworks.count", 3));
+        int intervalTicks = Math.max(0, plugin.getConfig().getInt("settings.celebration-fireworks.interval-ticks", 10));
+        for (int i = 0; i < count; i++) {
+            long delay = (long) i * intervalTicks;
+            Bukkit.getScheduler().runTaskLater(plugin, () -> spawnCelebrationFirework(map.spawn()), delay);
+        }
+    }
+
+    private void spawnCelebrationFirework(Location location) {
+        if (location == null || location.getWorld() == null) {
+            return;
+        }
+        Firework firework = location.getWorld().spawn(location.clone().add(0.0, 1.0, 0.0), Firework.class);
+        FireworkMeta meta = firework.getFireworkMeta();
+        meta.setPower(Math.max(0, plugin.getConfig().getInt("settings.celebration-fireworks.power", 1)));
+        meta.addEffect(FireworkEffect.builder()
+                .with(FireworkEffect.Type.BALL)
+                .withColor(fireworkColor())
+                .withFade(Color.WHITE)
+                .trail(false)
+                .flicker(true)
+                .build());
+        firework.setFireworkMeta(meta);
+    }
+
+    private Color fireworkColor() {
+        String value = plugin.getConfig().getString("settings.celebration-fireworks.color", "#6699d8");
+        if (value == null || value.isBlank()) {
+            return Color.fromRGB(102, 153, 216);
+        }
+        String normalized = value.trim().toLowerCase(Locale.ROOT);
+        try {
+            return switch (normalized) {
+                case "light_blue", "light-blue" -> Color.fromRGB(102, 153, 216);
+                case "blue" -> Color.BLUE;
+                case "aqua" -> Color.AQUA;
+                case "white" -> Color.WHITE;
+                case "red" -> Color.RED;
+                case "green" -> Color.GREEN;
+                default -> {
+                    if (normalized.startsWith("#")) {
+                        yield Color.fromRGB(Integer.parseInt(normalized.substring(1), 16));
+                    }
+                    String[] parts = normalized.split(",");
+                    if (parts.length == 3) {
+                        yield Color.fromRGB(
+                                Math.max(0, Math.min(255, Integer.parseInt(parts[0].trim()))),
+                                Math.max(0, Math.min(255, Integer.parseInt(parts[1].trim()))),
+                                Math.max(0, Math.min(255, Integer.parseInt(parts[2].trim())))
+                        );
+                    }
+                    yield Color.fromRGB(102, 153, 216);
+                }
+            };
+        } catch (IllegalArgumentException ignored) {
+            return Color.fromRGB(102, 153, 216);
         }
     }
 
@@ -808,6 +900,10 @@ public final class GameManager implements Listener {
         return seconds + " " + (seconds == 1 ? "second" : "seconds");
     }
 
+    private int doubleJumpMaxJumps() {
+        return Math.max(0, plugin.getConfig().getInt("settings.double-jump.max-jumps", 3));
+    }
+
     private boolean canBypassArenaBreakProtection(Player player) {
         return player != null && player.isOp() && !isActive(player);
     }
@@ -874,6 +970,33 @@ public final class GameManager implements Listener {
         }
     }
 
+    @EventHandler(ignoreCancelled = true)
+    public void onToggleFlight(PlayerToggleFlightEvent event) {
+        Player player = event.getPlayer();
+        if (state != GameState.ACTIVE || !isActive(player) || !plugin.getConfig().getBoolean("settings.double-jump.enabled", true)) {
+            return;
+        }
+        event.setCancelled(true);
+        player.setFlying(false);
+        int remaining = doubleJumpsRemaining.getOrDefault(player.getUniqueId(), 0);
+        if (remaining <= 0) {
+            player.setAllowFlight(false);
+            return;
+        }
+        remaining--;
+        doubleJumpsRemaining.put(player.getUniqueId(), remaining);
+        Vector direction = player.getLocation().getDirection();
+        direction.setY(0);
+        if (direction.lengthSquared() > 0.0) {
+            direction.normalize();
+        }
+        double multiplier = Math.max(0.0, plugin.getConfig().getDouble("settings.double-jump.multiplier", 0.5));
+        double height = Math.max(0.0, plugin.getConfig().getDouble("settings.double-jump.height", 0.3));
+        Vector velocity = direction.multiply(multiplier).setY(height);
+        player.setVelocity(velocity);
+        player.setAllowFlight(remaining > 0);
+    }
+
     @EventHandler
     public void onQuit(PlayerQuitEvent event) {
         queue.remove(event.getPlayer().getUniqueId());
@@ -881,6 +1004,7 @@ public final class GameManager implements Listener {
             eliminate(event.getPlayer(), "", true, false);
         }
         sessions.remove(event.getPlayer().getUniqueId());
+        doubleJumpsRemaining.remove(event.getPlayer().getUniqueId());
         dataManager.save();
     }
 
