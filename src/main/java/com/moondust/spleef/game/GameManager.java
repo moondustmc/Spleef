@@ -18,6 +18,7 @@ import org.bukkit.Material;
 import org.bukkit.Particle;
 import org.bukkit.World;
 import org.bukkit.block.Block;
+import org.bukkit.block.data.BlockData;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Firework;
@@ -276,7 +277,7 @@ public final class GameManager implements Listener {
                 for (int y = centerY - 1; y <= centerY + 1; y++) {
                     Block block = world.getBlockAt(x, y, z);
                     if (block.getType() == snowMaterial && map.inSnowLevel(block.getLocation())) {
-                        block.setType(Material.AIR, false);
+                        removeSnowBlock(block);
                         spawnBreakParticle(block.getLocation().add(0.5, 0.5, 0.5), null);
                         broken++;
                         break;
@@ -748,9 +749,27 @@ public final class GameManager implements Listener {
     }
 
     private void breakSnowBlock(Player player, Block block) {
-        block.setType(Material.AIR, false);
+        removeSnowBlock(block);
         lastBreak.put(player.getUniqueId(), System.currentTimeMillis());
         spawnBreakParticle(block.getLocation().add(0.5, 0.5, 0.5), player);
+    }
+
+    private void removeSnowBlock(Block block) {
+        sendImmediateAirChange(block);
+        block.setType(Material.AIR, false);
+    }
+
+    private void sendImmediateAirChange(Block block) {
+        if (block == null || block.getWorld() == null) {
+            return;
+        }
+        Location location = block.getLocation();
+        BlockData air = Material.AIR.createBlockData();
+        for (Player viewer : onlineActivePlayers()) {
+            if (viewer.getWorld().equals(block.getWorld())) {
+                viewer.sendBlockChange(location, air);
+            }
+        }
     }
 
     private void spawnBreakParticle(Location location, Player player) {
@@ -927,6 +946,8 @@ public final class GameManager implements Listener {
         if (canBypassArenaBreakProtection(event.getPlayer())) {
             return;
         }
+        event.setDropItems(false);
+        event.setExpToDrop(0);
         event.setCancelled(true);
         handleSnowBreak(event.getPlayer(), event.getBlock());
     }
