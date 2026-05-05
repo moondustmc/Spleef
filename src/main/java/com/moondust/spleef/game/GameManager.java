@@ -292,8 +292,18 @@ public final class GameManager implements Listener {
         if (isActive(player)) {
             return;
         }
+        giveQueueJoinMenuItem(player);
+        giveQueueLeaveMenuItem(player);
         giveCosmeticsMenuItem(player);
         giveBattleItemsMenuItem(player);
+    }
+
+    public void giveQueueJoinMenuItem(Player player) {
+        giveMenuItem(player, "settings.queue-join-item", "join_queue", Material.SLIME_BALL, "&aJoin Queue");
+    }
+
+    public void giveQueueLeaveMenuItem(Player player) {
+        giveMenuItem(player, "settings.queue-leave-item", "leave_queue", Material.REDSTONE, "&cLeave Queue");
     }
 
     public void giveCosmeticsMenuItem(Player player) {
@@ -306,6 +316,14 @@ public final class GameManager implements Listener {
 
     public ItemStack createCosmeticsMenuItem() {
         return createMenuItem("settings.cosmetics-menu-item", "open_cosmetics", Material.CHEST, "&bCosmetics");
+    }
+
+    public ItemStack createQueueJoinMenuItem() {
+        return createMenuItem("settings.queue-join-item", "join_queue", Material.SLIME_BALL, "&aJoin Queue");
+    }
+
+    public ItemStack createQueueLeaveMenuItem() {
+        return createMenuItem("settings.queue-leave-item", "leave_queue", Material.REDSTONE, "&cLeave Queue");
     }
 
     public ItemStack createBattleItemsMenuItem() {
@@ -537,6 +555,7 @@ public final class GameManager implements Listener {
         doubleJumpsRemaining.put(player.getUniqueId(), maxJumps);
         player.setAllowFlight(true);
         player.setFlying(false);
+        showDoubleJumpsRemaining(player, maxJumps);
     }
 
     private void saveSession(Player player) {
@@ -1024,6 +1043,7 @@ public final class GameManager implements Listener {
         int remaining = doubleJumpsRemaining.getOrDefault(player.getUniqueId(), 0);
         if (remaining <= 0) {
             player.setAllowFlight(false);
+            showDoubleJumpsRemaining(player, 0);
             return;
         }
         remaining--;
@@ -1038,6 +1058,14 @@ public final class GameManager implements Listener {
         Vector velocity = direction.multiply(multiplier).setY(height);
         player.setVelocity(velocity);
         player.setAllowFlight(remaining > 0);
+        showDoubleJumpsRemaining(player, remaining);
+    }
+
+    private void showDoubleJumpsRemaining(Player player, int remaining) {
+        plugin.actionBar(player, "messages.double-jumps-remaining", Map.of(
+                "{remaining}", Integer.toString(Math.max(0, remaining)),
+                "{max}", Integer.toString(doubleJumpMaxJumps())
+        ));
     }
 
     @EventHandler

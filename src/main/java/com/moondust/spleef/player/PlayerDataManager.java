@@ -7,6 +7,7 @@ import org.bukkit.OfflinePlayer;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.io.File;
@@ -16,6 +17,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 
@@ -66,6 +68,10 @@ public final class PlayerDataManager {
                 if (equipped != null) {
                     readEquippedCosmetics(equipped, "", data.equippedCosmetics());
                 }
+                ConfigurationSection equippedGear = playerSection.getConfigurationSection("equipped-gear");
+                if (equippedGear != null) {
+                    readEquippedGear(equippedGear, data.equippedCosmetics());
+                }
                 ConfigurationSection battleItems = playerSection.getConfigurationSection("battle-items");
                 if (battleItems != null) {
                     for (String id : battleItems.getKeys(false)) {
@@ -96,6 +102,7 @@ public final class PlayerDataManager {
             yaml.set(path + ".coins", data.coins());
             yaml.set(path + ".owned-cosmetics", new ArrayList<>(data.ownedCosmetics()));
             writeEquippedCosmetics(path + ".equipped-cosmetics", data.equippedCosmetics());
+            writeEquippedGear(path + ".equipped-gear", data.equippedCosmetics());
             yaml.set(path + ".battle-items", new LinkedHashMap<>(data.battleItems()));
             yaml.set(path + ".battle-loadout", new ArrayList<>(data.battleLoadout()));
             yaml.set(path + ".claimed-rewards", new ArrayList<>(data.claimedRewards()));
@@ -227,7 +234,33 @@ public final class PlayerDataManager {
             if (entry.getKey() == null || entry.getKey().isBlank() || entry.getValue() == null || entry.getValue().isBlank()) {
                 continue;
             }
+            if (entry.getKey().startsWith(ContentRegistry.CATEGORY_GEAR + ".")) {
+                continue;
+            }
             yaml.set(path + "." + entry.getKey(), entry.getValue());
         }
+    }
+
+    private void readEquippedGear(ConfigurationSection section, Map<String, String> equippedCosmetics) {
+        for (EquipmentSlot slot : List.of(EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET)) {
+            String id = section.getString(slot.name().toLowerCase(Locale.ROOT), "");
+            if (id != null && !id.isBlank()) {
+                equippedCosmetics.put(gearKey(slot), id);
+            }
+        }
+    }
+
+    private void writeEquippedGear(String path, Map<String, String> equippedCosmetics) {
+        yaml.set(path, null);
+        for (EquipmentSlot slot : List.of(EquipmentSlot.HEAD, EquipmentSlot.CHEST, EquipmentSlot.LEGS, EquipmentSlot.FEET)) {
+            String id = equippedCosmetics.getOrDefault(gearKey(slot), "");
+            if (!id.isBlank()) {
+                yaml.set(path + "." + slot.name().toLowerCase(Locale.ROOT), id);
+            }
+        }
+    }
+
+    private String gearKey(EquipmentSlot slot) {
+        return ContentRegistry.CATEGORY_GEAR + "." + slot.name().toLowerCase(Locale.ROOT);
     }
 }

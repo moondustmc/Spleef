@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
+import java.util.Objects;
 
 public final class ConfigUpdater {
     private final JavaPlugin plugin;
@@ -90,7 +91,37 @@ public final class ConfigUpdater {
         if (previousVersion < 12 && targetVersion >= 12) {
             changed += multiplyShopPrices(current.getConfigurationSection("shops.snowballer"), 0.5);
         }
+        if (previousVersion < 15 && targetVersion >= 15) {
+            changed += setPrice(current, "shops.coffee.items.coffee.price", 5);
+            changed += setPrice(current, "shops.coffee.items.coffee_2.price", 8);
+        }
+        if (previousVersion < 17 && targetVersion >= 17) {
+            changed += setIfParentExists(current, "battle-items.coffee.material", "PLAYER_HEAD");
+            changed += setIfParentExists(current, "battle-items.coffee.skull-texture", "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvNDc3YzVhM2E5YzM3ZjcxNjljOTExNTQ5OTg5N2JmNmI5ZDFlMmY1Mjk1ZDk5OTYwYmNlMzQ5OGZjMGQ2ZmU2NSJ9fX0=");
+            changed += setIfParentExists(current, "battle-items.coffee_2.material", "PLAYER_HEAD");
+            changed += setIfParentExists(current, "battle-items.coffee_2.skull-texture", "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOThlNWY3N2VlYzUwNmI4MGEwZGExZDFlMzY0OGFhNGQ2OWRkMzk2YjM1ZjMyOTc0Y2I0ZTdjZjY1YjA0NDY0YSJ9fX0=");
+        }
         return changed;
+    }
+
+    private int setIfParentExists(YamlConfiguration current, String path, Object value) {
+        int lastDot = path.lastIndexOf('.');
+        if (lastDot <= 0 || !current.isConfigurationSection(path.substring(0, lastDot))) {
+            return 0;
+        }
+        if (Objects.equals(current.get(path), value)) {
+            return 0;
+        }
+        current.set(path, value);
+        return 1;
+    }
+
+    private int setPrice(YamlConfiguration current, String path, int price) {
+        if (!current.contains(path, false)) {
+            return 0;
+        }
+        current.set(path, price);
+        return 1;
     }
 
     private int multiplyShopPrices(YamlConfiguration current, double multiplier) {

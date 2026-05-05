@@ -7,6 +7,7 @@ import com.moondust.spleef.content.CosmeticDefinition;
 import com.moondust.spleef.game.GameManager;
 import com.moondust.spleef.player.PlayerData;
 import com.moondust.spleef.player.PlayerDataManager;
+import com.moondust.spleef.util.Chat;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
@@ -35,6 +36,8 @@ public final class MenuManager implements Listener {
     private static final String BATTLE_TITLE = "BattleItems";
     private static final String OPEN_COSMETICS_ACTION = "open_cosmetics";
     private static final String OPEN_BATTLE_ITEMS_ACTION = "open_battleitems";
+    private static final String JOIN_QUEUE_ACTION = "join_queue";
+    private static final String LEAVE_QUEUE_ACTION = "leave_queue";
     private static final int[] COSMETIC_SLOTS = {10, 11, 12, 13, 14, 15, 16, 19, 20, 21, 22, 23, 24, 25};
     private static final int[] COMPACT_CATEGORY_SLOTS = {12, 13, 14, 15, 16};
     private static final int EQUIPPED_COMPACT_SLOT = 10;
@@ -177,27 +180,61 @@ public final class MenuManager implements Listener {
 
     private Inventory battleInventory(Player player, List<String> loadout) {
         Inventory inventory = Bukkit.createInventory(null, 54, BATTLE_TITLE);
+        populateBattleInventory(inventory, player, loadout);
+        return inventory;
+    }
+
+    private void populateBattleInventory(Inventory inventory, Player player, List<String> loadout) {
         decorateBattleItems(inventory);
         PlayerData data = dataManager.get(player);
         int slotIndex = 0;
         for (BattleItemDefinition definition : registry.battleItems()) {
             int count = data.battleItemCount(definition.id());
-            if (count <= 0 || slotIndex >= BATTLE_OWNED_SLOTS.length) {
+            if (count <= 0 || loadout.contains(definition.id()) || slotIndex >= BATTLE_OWNED_SLOTS.length) {
                 continue;
             }
-            inventory.setItem(BATTLE_OWNED_SLOTS[slotIndex], registry.battleItemStack(definition.id(), Math.min(64, count)));
+            inventory.setItem(BATTLE_OWNED_SLOTS[slotIndex], battleOwnedItem(definition.id(), count));
             slotIndex++;
         }
         inventory.setItem(BATTLE_SHOVEL_SLOT, registry.shovelFor(data));
         for (int i = 0; i < BATTLE_LOADOUT_SLOTS.length; i++) {
             String id = loadout.get(i);
             if (id != null && !id.isBlank() && data.battleItemCount(id) > 0) {
-                inventory.setItem(BATTLE_LOADOUT_SLOTS[i], registry.battleItemStack(id, Math.min(64, data.battleItemCount(id))));
+                inventory.setItem(BATTLE_LOADOUT_SLOTS[i], battleLoadoutItem(id, data.battleItemCount(id)));
             } else {
                 inventory.setItem(BATTLE_LOADOUT_SLOTS[i], registry.filler(Material.GRAY_STAINED_GLASS_PANE));
             }
         }
-        return inventory;
+    }
+
+    private ItemStack battleOwnedItem(String id, int count) {
+        ItemStack item = registry.battleItemStack(id, Math.min(64, count));
+        if (item == null) {
+            return null;
+        }
+        ItemMeta meta = item.getItemMeta();
+        if (meta != null) {
+            List<String> lore = meta.getLore() == null ? new ArrayList<>() : new ArrayList<>(meta.getLore());
+            lore.add(Math.min(1, lore.size()), Chat.color("&7Owned: &f" + count));
+            meta.setLore(lore);
+            item.setItemMeta(meta);
+        }
+        return item;
+    }
+
+    private ItemStack battleLoadoutItem(String id, int count) {
+        ItemStack item = registry.battleItemStack(id, Math.min(64, count));
+        if (item == null) {
+            return null;
+        }
+        ItemMeta meta = item.getItemMeta();
+        if (meta != null) {
+            List<String> lore = meta.getLore() == null ? new ArrayList<>() : new ArrayList<>(meta.getLore());
+            lore.add(Math.min(1, lore.size()), Chat.color("&7Stack: &f" + item.getAmount()));
+            meta.setLore(lore);
+            item.setItemMeta(meta);
+        }
+        return item;
     }
 
     @EventHandler(priority = EventPriority.HIGH)
@@ -276,12 +313,13 @@ public final class MenuManager implements Listener {
         if (BATTLE_TITLE.equals(title) && event.getWhoClicked() instanceof Player player) {
             for (int rawSlot : event.getRawSlots()) {
                 if (battleLoadoutIndex(rawSlot) >= 0) {
-                    equipBattleItemFromCursor(player, event.getOldCursor(), battleLoadoutIndex(rawSlot));
+                    equipBattleItemFromCursor(player, event.getOldCursor(), battleLoadoutIndex(rawSlot), event.getView().getTopInventory());
                     clearPluginCursor(player);
                     return;
                 }
-                if (isBattleOwnedSlot(rawSlot) && !registry.battleItemId(event.getOldCursor()).isBlank()) {
-                    clearPluginCursor(player);
+                String cursorId = registry.battleItemId(event.getOldCursor());
+                if (isBattleOwnedSlot(rawSlot) && !cursorId.isBlank()) {
+                    returnBattleItemToOwnedList(player, cursorId, event.getView().getTopInventory());
                     return;
                 }
             }
@@ -434,7 +472,7 @@ public final class MenuManager implements Listener {
         if (loadoutIndex >= 0) {
             String cursorId = registry.battleItemId(event.getCursor());
             if (!cursorId.isBlank()) {
-                equipBattleItemFromCursor(player, event.getCursor(), loadoutIndex);
+                equipBattleItemFromCursor(player, event.getCursor(), loadoutIndex, event.getView().getTopInventory());
                 clearPluginCursor(player);
                 return;
             }
@@ -444,13 +482,13 @@ public final class MenuManager implements Listener {
                 loadout.set(loadoutIndex, "");
                 saveBattleEditorValues(player, loadout);
                 player.setItemOnCursor(current == null ? null : current.clone());
-                event.getView().getTopInventory().setItem(rawSlot, registry.filler(Material.GRAY_STAINED_GLASS_PANE));
+                populateBattleInventory(event.getView().getTopInventory(), player, loadout);
             }
             return;
         }
         String cursorId = registry.battleItemId(event.getCursor());
         if (isBattleOwnedSlot(rawSlot) && !cursorId.isBlank()) {
-            clearPluginCursor(player);
+            returnBattleItemToOwnedList(player, cursorId, event.getView().getTopInventory());
             return;
         }
         String id = registry.battleItemId(event.getCurrentItem());
@@ -504,7 +542,7 @@ public final class MenuManager implements Listener {
         return loadout;
     }
 
-    private boolean equipBattleItemFromCursor(Player player, ItemStack item, int loadoutIndex) {
+    private boolean equipBattleItemFromCursor(Player player, ItemStack item, int loadoutIndex, Inventory inventory) {
         String id = registry.battleItemId(item);
         if (id.isBlank()) {
             return false;
@@ -521,8 +559,20 @@ public final class MenuManager implements Listener {
         }
         loadout.set(loadoutIndex, id);
         saveBattleEditorValues(player, loadout);
-        player.openInventory(battleInventory(player, loadout));
+        populateBattleInventory(inventory, player, loadout);
         return true;
+    }
+
+    private void returnBattleItemToOwnedList(Player player, String id, Inventory inventory) {
+        List<String> loadout = editorLoadout(player);
+        if (loadout.removeIf(id::equals)) {
+            while (loadout.size() < BATTLE_LOADOUT_SLOTS.length) {
+                loadout.add("");
+            }
+            saveBattleEditorValues(player, loadout);
+        }
+        clearPluginCursor(player);
+        populateBattleInventory(inventory, player, loadout);
     }
 
     private boolean isManagedTitle(String title) {
@@ -705,7 +755,10 @@ public final class MenuManager implements Listener {
     }
 
     private boolean isInventoryMenuAction(String action) {
-        return action.equals(OPEN_COSMETICS_ACTION) || action.equals(OPEN_BATTLE_ITEMS_ACTION);
+        return action.equals(OPEN_COSMETICS_ACTION)
+                || action.equals(OPEN_BATTLE_ITEMS_ACTION)
+                || action.equals(JOIN_QUEUE_ACTION)
+                || action.equals(LEAVE_QUEUE_ACTION);
     }
 
     private void openInventoryMenu(Player player, String action) {
@@ -713,6 +766,10 @@ public final class MenuManager implements Listener {
             openCosmetics(player);
         } else if (action.equals(OPEN_BATTLE_ITEMS_ACTION)) {
             openBattleItems(player);
+        } else if (action.equals(JOIN_QUEUE_ACTION)) {
+            gameManager.joinQueue(player);
+        } else if (action.equals(LEAVE_QUEUE_ACTION)) {
+            gameManager.leaveQueue(player);
         }
     }
 

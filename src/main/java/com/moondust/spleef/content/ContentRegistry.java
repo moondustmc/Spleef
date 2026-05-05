@@ -2,6 +2,7 @@ package com.moondust.spleef.content;
 
 import com.moondust.spleef.player.PlayerData;
 import com.moondust.spleef.util.Chat;
+import org.bukkit.Bukkit;
 import org.bukkit.Color;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -13,16 +14,25 @@ import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.LeatherArmorMeta;
+import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.profile.PlayerProfile;
+import org.bukkit.profile.PlayerTextures;
 
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.UUID;
 
 public final class ContentRegistry {
     public static final String CATEGORY_SHOVELS = "shovels";
@@ -74,7 +84,8 @@ public final class ContentRegistry {
                     itemSection.getInt("fuse-seconds", 3),
                     itemSection.getInt("speed-amplifier", 1),
                     itemSection.getInt("duration-seconds", 8),
-                    maxStackSize(itemSection.getInt("max-stack-size", 0))
+                    maxStackSize(itemSection.getInt("max-stack-size", 0)),
+                    itemSection.getString("skull-texture", "")
             );
             battleItems.put(id, definition);
         }
@@ -178,6 +189,7 @@ public final class ContentRegistry {
             meta.setDisplayName(Chat.color(definition.name()));
             meta.setLore(List.of(Chat.color("&7Battle Item"), Chat.color("&8" + id)));
             meta.getPersistentDataContainer().set(battleItemKey, PersistentDataType.STRING, id);
+            applySkullTexture(meta, definition);
             if (definition.maxStackSize() > 0) {
                 meta.setMaxStackSize(definition.maxStackSize());
             }
@@ -381,6 +393,43 @@ public final class ContentRegistry {
         }
         Material material = Material.matchMaterial(value);
         return material == null ? fallback : material;
+    }
+
+    private void applySkullTexture(ItemMeta meta, BattleItemDefinition definition) {
+        if (!(meta instanceof SkullMeta skullMeta) || definition.skullTexture() == null || definition.skullTexture().isBlank()) {
+            return;
+        }
+        URL skinUrl = skullSkinUrl(definition.skullTexture());
+        if (skinUrl == null) {
+            return;
+        }
+        PlayerProfile profile = Bukkit.createPlayerProfile(UUID.nameUUIDFromBytes(definition.skullTexture().getBytes(StandardCharsets.UTF_8)));
+        PlayerTextures textures = profile.getTextures();
+        textures.setSkin(skinUrl);
+        profile.setTextures(textures);
+        skullMeta.setOwnerProfile(profile);
+    }
+
+    private URL skullSkinUrl(String texture) {
+        try {
+            String decoded = new String(Base64.getDecoder().decode(texture), StandardCharsets.UTF_8);
+            int keyIndex = decoded.indexOf("\"url\"");
+            if (keyIndex < 0) {
+                return null;
+            }
+            int colonIndex = decoded.indexOf(':', keyIndex);
+            if (colonIndex < 0) {
+                return null;
+            }
+            int startQuote = decoded.indexOf('"', colonIndex);
+            int endQuote = decoded.indexOf('"', startQuote + 1);
+            if (startQuote < 0 || endQuote < 0) {
+                return null;
+            }
+            return URI.create(decoded.substring(startQuote + 1, endQuote)).toURL();
+        } catch (IllegalArgumentException | MalformedURLException exception) {
+            return null;
+        }
     }
 
     private int maxStackSize(int value) {

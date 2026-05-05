@@ -12,6 +12,7 @@ public record BattleItemDefinition(
         int fuseSeconds,
         int speedAmplifier,
         int durationSeconds,
-        int maxStackSize
+        int maxStackSize,
+        String skullTexture
 ) {
 }
