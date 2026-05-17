@@ -95,7 +95,7 @@ public final class MenuManager implements Listener {
             openGearCategory(player, page);
             return;
         }
-        List<CosmeticDefinition> definitions = new ArrayList<>(registry.cosmetics(category).values());
+        List<CosmeticDefinition> definitions = registry.cosmeticsForDisplay(category);
         int pageSize = COSMETIC_SLOTS.length;
         int pages = Math.max(1, (int) Math.ceil(definitions.size() / (double) pageSize));
         int actualPage = Math.floorMod(page, pages);
@@ -140,7 +140,7 @@ public final class MenuManager implements Listener {
     }
 
     private void openCompactCategory(Player player, String category, int page) {
-        List<CosmeticDefinition> definitions = new ArrayList<>(registry.cosmetics(category).values());
+        List<CosmeticDefinition> definitions = registry.cosmeticsForDisplay(category);
         int pageSize = COMPACT_CATEGORY_SLOTS.length;
         int pages = Math.max(1, (int) Math.ceil(definitions.size() / (double) pageSize));
         int actualPage = Math.floorMod(page, pages);

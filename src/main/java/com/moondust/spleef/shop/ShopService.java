@@ -25,6 +25,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -348,7 +349,7 @@ public final class ShopService implements Listener {
                     entries.add(entryFromSection(shopId, id, section));
                 }
             }
-            return entries;
+            return orderedEntries(entries);
         }
         List<Map<?, ?>> itemList = shop.getMapList("items");
         if (!itemList.isEmpty()) {
@@ -356,9 +357,20 @@ public final class ShopService implements Listener {
             for (int i = 0; i < itemList.size(); i++) {
                 entries.add(entryFromMap(shopId, "item_" + i, itemList.get(i)));
             }
-            return entries;
+            return orderedEntries(entries);
         }
         return List.of(entryFromSection(shopId, "default", shop));
+    }
+
+    private List<ShopEntry> orderedEntries(List<ShopEntry> entries) {
+        if (!entries.isEmpty() && entries.stream().allMatch(this::isShovelCosmeticEntry)) {
+            entries.sort(Comparator.comparingInt(entry -> registry.cosmeticDisplayOrder(entry.category(), entry.item())));
+        }
+        return entries;
+    }
+
+    private boolean isShovelCosmeticEntry(ShopEntry entry) {
+        return entry.type().equals("cosmetic") && ContentRegistry.CATEGORY_SHOVELS.equals(entry.category());
     }
 
     private ShopEntry entryFromSection(String shopId, String id, ConfigurationSection section) {

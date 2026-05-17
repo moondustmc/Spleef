@@ -61,6 +61,9 @@ import java.util.Set;
 import java.util.UUID;
 
 public final class GameManager implements Listener {
+    private static final double PLAYER_COLLISION_RADIUS = 0.31;
+    private static final double DOUBLE_JUMP_CLEARANCE_STEP = 0.35;
+
     private final Spleef plugin;
     private final PlayerDataManager dataManager;
     private final ContentRegistry registry;
@@ -166,10 +169,17 @@ public final class GameManager implements Listener {
         }
         queue.add(player.getUniqueId());
         dataManager.get(player);
-        giveMenuItems(player);
         plugin.message(player, "messages.join");
-        updateScoreboard(player);
-        tryStart();
+        if (state == GameState.COUNTDOWN) {
+            ArenaMap map = currentMap();
+            if (map != null && map.ready()) {
+                addPlayerToCountdown(player, map);
+            }
+        } else {
+            giveMenuItems(player);
+            updateScoreboard(player);
+            tryStart();
+        }
         return true;
     }
 
@@ -385,10 +395,7 @@ public final class GameManager implements Listener {
         state = GameState.COUNTDOWN;
         activePlayers.clear();
         for (Player player : players) {
-            activePlayers.add(player.getUniqueId());
-            preparePlayerForArena(player, false);
-            player.teleport(map.spawn());
-            updateScoreboard(player);
+            addPlayerToCountdown(player, map);
         }
         int countdownSeconds = Math.max(1, plugin.getConfig().getInt("settings.countdown-seconds", 15));
         broadcast("messages.starting", Map.of("{seconds}", Integer.toString(countdownSeconds)));
@@ -419,6 +426,15 @@ public final class GameManager implements Listener {
                 remaining[0]--;
             }
         }.runTaskTimer(plugin, 0L, 20L);
+    }
+
+    private void addPlayerToCountdown(Player player, ArenaMap map) {
+        if (!activePlayers.add(player.getUniqueId())) {
+            return;
+        }
+        preparePlayerForArena(player, false);
+        player.teleport(map.spawn());
+        updateScoreboard(player);
     }
 
     private void abortCountdown() {
@@ -1055,10 +1071,62 @@ public final class GameManager implements Listener {
         }
         double multiplier = Math.max(0.0, plugin.getConfig().getDouble("settings.double-jump.multiplier", 0.5));
         double height = Math.max(0.0, plugin.getConfig().getDouble("settings.double-jump.height", 0.3));
+        if (!hasDoubleJumpClearance(player, direction, multiplier)) {
+            direction.zero();
+        }
         Vector velocity = direction.multiply(multiplier).setY(height);
         player.setVelocity(velocity);
-        player.setAllowFlight(remaining > 0);
+        resetDoubleJumpFlight(player, remaining);
         showDoubleJumpsRemaining(player, remaining);
+    }
+
+    private boolean hasDoubleJumpClearance(Player player, Vector direction, double distance) {
+        if (direction.lengthSquared() <= 0.0) {
+            return true;
+        }
+        Location origin = player.getLocation();
+        if (origin.getWorld() == null) {
+            return false;
+        }
+        Vector side = new Vector(-direction.getZ(), 0.0, direction.getX());
+        if (side.lengthSquared() > 0.0) {
+            side.normalize();
+        }
+        double maxDistance = Math.max(PLAYER_COLLISION_RADIUS, distance + PLAYER_COLLISION_RADIUS);
+        for (double forward = DOUBLE_JUMP_CLEARANCE_STEP; forward <= maxDistance; forward += DOUBLE_JUMP_CLEARANCE_STEP) {
+            Location center = origin.clone().add(direction.getX() * forward, 0.0, direction.getZ() * forward);
+            if (!hasTwoBlockTallClearance(center, side)) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private boolean hasTwoBlockTallClearance(Location center, Vector side) {
+        for (double offset : List.of(0.0, PLAYER_COLLISION_RADIUS, -PLAYER_COLLISION_RADIUS)) {
+            Location sample = center.clone().add(side.getX() * offset, 0.0, side.getZ() * offset);
+            if (!sample.getBlock().isPassable() || !sample.clone().add(0.0, 1.0, 0.0).getBlock().isPassable()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    private void resetDoubleJumpFlight(Player player, int remaining) {
+        player.setAllowFlight(false);
+        if (remaining <= 0) {
+            return;
+        }
+        Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            if (state == GameState.ACTIVE
+                    && player.isOnline()
+                    && isActive(player)
+                    && plugin.getConfig().getBoolean("settings.double-jump.enabled", true)
+                    && doubleJumpsRemaining.getOrDefault(player.getUniqueId(), 0) > 0) {
+                player.setFlying(false);
+                player.setAllowFlight(true);
+            }
+        }, 1L);
     }
 
     private void showDoubleJumpsRemaining(Player player, int remaining) {
@@ -1101,12 +1169,13 @@ public final class GameManager implements Listener {
         if (map != null && map.lobby() != null) {
             event.setRespawnLocation(map.lobby());
         }
-        if (sessions.containsKey(event.getPlayer().getUniqueId())) {
-            Bukkit.getScheduler().runTask(plugin, () -> {
+        boolean hasSavedSession = sessions.containsKey(event.getPlayer().getUniqueId());
+        Bukkit.getScheduler().runTask(plugin, () -> {
+            if (hasSavedSession) {
                 restoreSession(event.getPlayer(), false);
-                giveMenuItems(event.getPlayer());
-            });
-        }
+            }
+            giveMenuItems(event.getPlayer());
+        });
     }
 
     @EventHandler

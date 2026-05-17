@@ -101,6 +101,10 @@ public final class ConfigUpdater {
             changed += setIfParentExists(current, "battle-items.coffee_2.material", "PLAYER_HEAD");
             changed += setIfParentExists(current, "battle-items.coffee_2.skull-texture", "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOThlNWY3N2VlYzUwNmI4MGEwZGExZDFlMzY0OGFhNGQ2OWRkMzk2YjM1ZjMyOTc0Y2I0ZTdjZjY1YjA0NDY0YSJ9fX0=");
         }
+        if (previousVersion < 19 && targetVersion >= 19) {
+            changed += setIfParentExists(current, "shops.snowballer.items.snowball_bucket.amount", 4);
+            changed += setIfParentExists(current, "battle-items.snowball_bucket.max-stack-size", 4);
+        }
         return changed;
     }
 

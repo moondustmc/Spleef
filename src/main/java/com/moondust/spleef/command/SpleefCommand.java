@@ -9,6 +9,7 @@ import com.moondust.spleef.leaderboard.LeaderboardService;
 import com.moondust.spleef.menu.MenuManager;
 import com.moondust.spleef.player.PlayerData;
 import com.moondust.spleef.player.PlayerDataManager;
+import com.moondust.spleef.scoreboard.ScoreboardService;
 import com.moondust.spleef.shop.NpcShopService;
 import com.moondust.spleef.shop.ShopService;
 import com.moondust.spleef.util.LocationCodec;
@@ -46,18 +47,20 @@ public final class SpleefCommand implements CommandExecutor, TabCompleter {
     private final PlayerDataManager dataManager;
     private final ContentRegistry registry;
     private final LeaderboardService leaderboardService;
+    private final ScoreboardService scoreboardService;
     private final NpcShopService npcShopService;
     private final ShopService shopService;
 
     public SpleefCommand(Spleef plugin, GameManager gameManager, MenuManager menuManager,
                          PlayerDataManager dataManager, ContentRegistry registry, LeaderboardService leaderboardService,
-                         NpcShopService npcShopService, ShopService shopService) {
+                         ScoreboardService scoreboardService, NpcShopService npcShopService, ShopService shopService) {
         this.plugin = plugin;
         this.gameManager = gameManager;
         this.menuManager = menuManager;
         this.dataManager = dataManager;
         this.registry = registry;
         this.leaderboardService = leaderboardService;
+        this.scoreboardService = scoreboardService;
         this.npcShopService = npcShopService;
         this.shopService = shopService;
     }
@@ -518,6 +521,7 @@ public final class SpleefCommand implements CommandExecutor, TabCompleter {
                     "{multiplier}", Double.toString(multiplier)
             ));
         }
+        scoreboardService.updateAll();
         return true;
     }
 

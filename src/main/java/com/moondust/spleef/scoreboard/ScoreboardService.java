@@ -71,6 +71,12 @@ public final class ScoreboardService {
         player.setScoreboard(scoreboard);
     }
 
+    public void updateAll() {
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            update(player);
+        }
+    }
+
     private String placeholders(String line, Player player, PlayerData data) {
         return line
                 .replace("{global_multiplier}", formatMultiplier(dataManager.globalMultiplier()))

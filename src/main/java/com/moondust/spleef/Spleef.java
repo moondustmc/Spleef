@@ -65,7 +65,7 @@ public final class Spleef extends JavaPlugin {
         gameManager.setScoreboardService(scoreboardService);
         npcShopService = loadNpcShopService();
 
-        SpleefCommand command = new SpleefCommand(this, gameManager, menuManager, playerDataManager, contentRegistry, leaderboardService, npcShopService, shopService);
+        SpleefCommand command = new SpleefCommand(this, gameManager, menuManager, playerDataManager, contentRegistry, leaderboardService, scoreboardService, npcShopService, shopService);
         registerCommand("spleef", command);
         registerCommand("stats", command);
         registerCommand("battleitems", command);

@@ -28,6 +28,7 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -160,6 +161,25 @@ public final class ContentRegistry {
 
     public Map<String, CosmeticDefinition> cosmetics(String category) {
         return cosmetics.getOrDefault(category, Collections.emptyMap());
+    }
+
+    public List<CosmeticDefinition> cosmeticsForDisplay(String category) {
+        List<CosmeticDefinition> definitions = new ArrayList<>(cosmetics(category).values());
+        if (CATEGORY_SHOVELS.equals(category)) {
+            definitions.sort(Comparator.comparingInt(definition -> shovelSpeedOrder(definition.material())));
+        }
+        return definitions;
+    }
+
+    public int cosmeticDisplayOrder(String category, String id) {
+        CosmeticDefinition definition = cosmetic(category, id);
+        if (definition == null) {
+            return Integer.MAX_VALUE;
+        }
+        if (CATEGORY_SHOVELS.equals(category)) {
+            return shovelSpeedOrder(definition.material());
+        }
+        return 0;
     }
 
     public CosmeticDefinition cosmetic(String category, String id) {
@@ -441,6 +461,19 @@ public final class ContentRegistry {
 
     private CosmeticDefinition firstCosmetic(String category) {
         return cosmetics(category).values().stream().findFirst().orElse(null);
+    }
+
+    private int shovelSpeedOrder(Material material) {
+        return switch (material) {
+            case WOODEN_SHOVEL -> 10;
+            case STONE_SHOVEL -> 20;
+            case COPPER_SHOVEL -> 30;
+            case IRON_SHOVEL -> 40;
+            case DIAMOND_SHOVEL -> 50;
+            case NETHERITE_SHOVEL -> 60;
+            case GOLDEN_SHOVEL -> 70;
+            default -> Integer.MAX_VALUE;
+        };
     }
 
     private ItemStack cosmeticEquipment(CosmeticDefinition definition) {

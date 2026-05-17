@@ -1,4 +1,4 @@
-config-version: 18
+config-version: 19
 
 settings:
   min-players: 2
@@ -37,7 +37,7 @@ settings:
     enabled: true
     slot: 0
     material: SLIME_BALL
-    name: "&aJoin Spleef"
+    name: "&aJoin Queue"
   queue-leave-item:
     enabled: true
     slot: 1
@@ -411,6 +411,7 @@ shops:
       snowball_bucket:
         type: battle
         item: snowball_bucket
+        amount: 4
         price: 37.5
         free-once: false
       snow_boulder:
@@ -450,6 +451,7 @@ battle-items:
     action: BUCKET
     projectile-count: 4
     radius: 0
+    max-stack-size: 4
   coffee:
     name: "&6Coffee"
     material: PLAYER_HEAD

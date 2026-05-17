@@ -158,6 +158,10 @@ public final class PlayerDataManager {
     }
 
     public double globalMultiplier() {
+        return configuredGlobalMultiplier() * activeServerBooster();
+    }
+
+    private double configuredGlobalMultiplier() {
         return Math.max(0.0, plugin.getConfig().getDouble("coin-multipliers.global", 1.0));
     }
 
@@ -171,7 +175,7 @@ public final class PlayerDataManager {
                 }
             }
         }
-        return globalMultiplier() * permissionMultiplier * activeServerBooster();
+        return globalMultiplier() * permissionMultiplier;
     }
 
     public void activateServerBooster(double multiplier, long durationMillis) {
