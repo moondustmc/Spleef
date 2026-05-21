@@ -82,7 +82,7 @@ public final class ContentRegistry {
                     itemSection.getString("action", "SNOWBALL").toUpperCase(Locale.ROOT),
                     itemSection.getInt("radius", 0),
                     itemSection.getInt("projectile-count", 1),
-                    itemSection.getInt("fuse-seconds", 3),
+                    itemSection.getDouble("fuse-seconds", 3.0),
                     itemSection.getInt("speed-amplifier", 1),
                     itemSection.getInt("duration-seconds", 8),
                     maxStackSize(itemSection.getInt("max-stack-size", 0)),
@@ -300,11 +300,13 @@ public final class ContentRegistry {
         if (meta != null) {
             meta.setDisplayName(Chat.color(definition == null ? "&fSpleef Shovel" : definition.name()));
             meta.setUnbreakable(true);
+            meta.addEnchant(Enchantment.EFFICIENCY, 5, true);
+            meta.setEnchantmentGlintOverride(false);
             if (definition != null) {
                 meta.getPersistentDataContainer().set(cosmeticCategoryKey, PersistentDataType.STRING, definition.category());
                 meta.getPersistentDataContainer().set(cosmeticIdKey, PersistentDataType.STRING, definition.id());
             }
-            meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_UNBREAKABLE);
+            meta.addItemFlags(ItemFlag.HIDE_ATTRIBUTES, ItemFlag.HIDE_ENCHANTS, ItemFlag.HIDE_UNBREAKABLE);
             shovel.setItemMeta(meta);
         }
         return shovel;

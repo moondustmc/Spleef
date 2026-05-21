@@ -105,7 +105,36 @@ public final class ConfigUpdater {
             changed += setIfParentExists(current, "shops.snowballer.items.snowball_bucket.amount", 4);
             changed += setIfParentExists(current, "battle-items.snowball_bucket.max-stack-size", 4);
         }
+        if (previousVersion < 21 && targetVersion >= 21) {
+            changed += setIfParentExists(current, "battle-items.snow_bomb.max-stack-size", 1);
+        }
+        if (previousVersion < 22 && targetVersion >= 22) {
+            changed += setIfParentExists(current, "battle-items.snow_bomb.material", "MAGMA_CREAM");
+        }
+        if (previousVersion < 23 && targetVersion >= 23) {
+            changed += setIfParentExists(current, "shops.snowballer.items.snow_bomb.price", 30);
+        }
+        if (previousVersion < 24 && targetVersion >= 24) {
+            changed += setIfParentExists(current, "battle-items.snow_bomb.fuse-seconds", 2.2);
+        }
+        if (previousVersion < 25 && targetVersion >= 25) {
+            changed += setIfParentExists(current, "battle-items.snow_bomb.fuse-seconds", 1.3);
+        }
+        if (previousVersion < 26 && targetVersion >= 26) {
+            changed += setIfParentExists(current, "battle-items.snow_bomb.fuse-seconds", 1.6);
+        }
+        if (previousVersion < 27 && targetVersion >= 27) {
+            changed += raiseDoubleIfBelow(current, "settings.double-jump.height", 0.7);
+        }
         return changed;
+    }
+
+    private int raiseDoubleIfBelow(YamlConfiguration current, String path, double minimum) {
+        if (!current.contains(path, false) || current.getDouble(path, minimum) >= minimum) {
+            return 0;
+        }
+        current.set(path, minimum);
+        return 1;
     }
 
     private int setIfParentExists(YamlConfiguration current, String path, Object value) {

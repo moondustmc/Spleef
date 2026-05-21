@@ -9,7 +9,7 @@ public record BattleItemDefinition(
         String action,
         int radius,
         int projectileCount,
-        int fuseSeconds,
+        double fuseSeconds,
         int speedAmplifier,
         int durationSeconds,
         int maxStackSize,

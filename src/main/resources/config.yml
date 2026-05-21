@@ -1,4 +1,4 @@
-config-version: 19
+config-version: 27
 
 settings:
   min-players: 2
@@ -15,7 +15,7 @@ settings:
   double-jump:
     enabled: true
     multiplier: 0.5
-    height: 0.3
+    height: 0.7
     max-jumps: 3
   celebration-fireworks:
     enabled: true
@@ -419,6 +419,11 @@ shops:
         item: snow_boulder
         price: 50
         free-once: false
+      snow_bomb:
+        type: battle
+        item: snow_bomb
+        price: 30
+        free-once: false
   coffee:
     title: "&6Coffee Shop"
     items:
@@ -468,10 +473,11 @@ battle-items:
     skull-texture: "eyJ0ZXh0dXJlcyI6eyJTS0lOIjp7InVybCI6Imh0dHA6Ly90ZXh0dXJlcy5taW5lY3JhZnQubmV0L3RleHR1cmUvOThlNWY3N2VlYzUwNmI4MGEwZGExZDFlMzY0OGFhNGQ2OWRkMzk2YjM1ZjMyOTc0Y2I0ZTdjZjY1YjA0NDY0YSJ9fX0="
   snow_bomb:
     name: "&cSnow-Bomb"
-    material: FIRE_CHARGE
+    material: MAGMA_CREAM
     action: BOMB
     radius: 5
-    fuse-seconds: 3
+    fuse-seconds: 1.6
+    max-stack-size: 1
 
 cosmetics:
   shovels:

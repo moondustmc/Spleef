@@ -61,9 +61,6 @@ import java.util.Set;
 import java.util.UUID;
 
 public final class GameManager implements Listener {
-    private static final double PLAYER_COLLISION_RADIUS = 0.31;
-    private static final double DOUBLE_JUMP_CLEARANCE_STEP = 0.35;
-
     private final Spleef plugin;
     private final PlayerDataManager dataManager;
     private final ContentRegistry registry;
@@ -74,6 +71,7 @@ public final class GameManager implements Listener {
     private final Map<UUID, Long> lastMove = new HashMap<>();
     private final Map<UUID, Location> lastMoveLocation = new HashMap<>();
     private final Map<UUID, Integer> doubleJumpsRemaining = new HashMap<>();
+    private final Set<UUID> doubleJumpCooldown = new HashSet<>();
     private final List<ArenaMap> maps = new ArrayList<>();
     private Material snowMaterial;
     private Material deathMaterial;
@@ -272,6 +270,10 @@ public final class GameManager implements Listener {
     }
 
     public int breakSnowAt(Location center, int radius) {
+        return breakSnowAt(center, radius, false);
+    }
+
+    private int breakSnowAt(Location center, int radius, boolean circular) {
         ArenaMap map = currentMap();
         if (center == null || center.getWorld() == null || map == null || !map.ready()) {
             return 0;
@@ -284,6 +286,9 @@ public final class GameManager implements Listener {
         int centerZ = center.getBlockZ();
         for (int x = centerX - actualRadius; x <= centerX + actualRadius; x++) {
             for (int z = centerZ - actualRadius; z <= centerZ + actualRadius; z++) {
+                if (circular && !insideCircle(centerX, centerZ, x, z, actualRadius)) {
+                    continue;
+                }
                 for (int y = centerY - 1; y <= centerY + 1; y++) {
                     Block block = world.getBlockAt(x, y, z);
                     if (block.getType() == snowMaterial && map.inSnowLevel(block.getLocation())) {
@@ -296,6 +301,32 @@ public final class GameManager implements Listener {
             }
         }
         return broken;
+    }
+
+    private boolean insideCircle(int centerX, int centerZ, int x, int z, int radius) {
+        int dx = x - centerX;
+        int dz = z - centerZ;
+        return dx * dx + dz * dz <= radius * radius;
+    }
+
+    public int breakSnowAtSnowLevel(Location center, int radius) {
+        ArenaMap map = currentMap();
+        if (center == null || center.getWorld() == null || map == null || !map.ready()) {
+            return 0;
+        }
+        Location snowLevelCenter = center.clone();
+        snowLevelCenter.setY(map.snowMinY());
+        return breakSnowAt(snowLevelCenter, radius);
+    }
+
+    public int breakSnowCircleAtSnowLevel(Location center, int radius) {
+        ArenaMap map = currentMap();
+        if (center == null || center.getWorld() == null || map == null || !map.ready()) {
+            return 0;
+        }
+        Location snowLevelCenter = center.clone();
+        snowLevelCenter.setY(map.snowMinY());
+        return breakSnowAt(snowLevelCenter, radius, true);
     }
 
     public void giveMenuItems(Player player) {
@@ -441,6 +472,7 @@ public final class GameManager implements Listener {
         for (Player player : onlineActivePlayers()) {
             restoreSession(player, true);
             doubleJumpsRemaining.remove(player.getUniqueId());
+            doubleJumpCooldown.remove(player.getUniqueId());
             updateScoreboard(player);
             giveMenuItems(player);
         }
@@ -505,6 +537,7 @@ public final class GameManager implements Listener {
         lastMove.clear();
         lastMoveLocation.clear();
         doubleJumpsRemaining.clear();
+        doubleJumpCooldown.clear();
         regenerateArena();
         dataManager.save();
         int delay = Math.max(1, plugin.getConfig().getInt("settings.restart-delay-seconds", 8));
@@ -528,6 +561,7 @@ public final class GameManager implements Listener {
             return;
         }
         doubleJumpsRemaining.remove(player.getUniqueId());
+        doubleJumpCooldown.remove(player.getUniqueId());
         PlayerData data = dataManager.get(player);
         data.currentStreak(0);
         if (messagePath != null && !messagePath.isBlank()) {
@@ -545,7 +579,6 @@ public final class GameManager implements Listener {
 
     private void preparePlayerForArena(Player player, boolean giveItems) {
         saveSession(player);
-        player.closeInventory();
         player.getInventory().clear();
         player.getInventory().setArmorContents(null);
         player.setGameMode(GameMode.SURVIVAL);
@@ -564,11 +597,13 @@ public final class GameManager implements Listener {
         int maxJumps = doubleJumpMaxJumps();
         if (!plugin.getConfig().getBoolean("settings.double-jump.enabled", true) || maxJumps <= 0) {
             doubleJumpsRemaining.remove(player.getUniqueId());
+            doubleJumpCooldown.remove(player.getUniqueId());
             player.setAllowFlight(false);
             player.setFlying(false);
             return;
         }
         doubleJumpsRemaining.put(player.getUniqueId(), maxJumps);
+        doubleJumpCooldown.remove(player.getUniqueId());
         player.setAllowFlight(true);
         player.setFlying(false);
         showDoubleJumpsRemaining(player, maxJumps);
@@ -606,6 +641,7 @@ public final class GameManager implements Listener {
             player.getInventory().setHeldItemSlot(session.heldSlot());
         }
         player.removePotionEffect(PotionEffectType.SPEED);
+        player.setFireTicks(0);
         if (teleportLobby) {
             ArenaMap map = currentMap();
             Location destination = map == null ? null : map.lobby();
@@ -1056,77 +1092,40 @@ public final class GameManager implements Listener {
         }
         event.setCancelled(true);
         player.setFlying(false);
-        int remaining = doubleJumpsRemaining.getOrDefault(player.getUniqueId(), 0);
+        UUID playerId = player.getUniqueId();
+        if (doubleJumpCooldown.contains(playerId)) {
+            return;
+        }
+        int remaining = doubleJumpsRemaining.getOrDefault(playerId, 0);
         if (remaining <= 0) {
             player.setAllowFlight(false);
             showDoubleJumpsRemaining(player, 0);
             return;
         }
         remaining--;
-        doubleJumpsRemaining.put(player.getUniqueId(), remaining);
+        doubleJumpsRemaining.put(playerId, remaining);
         Vector direction = player.getLocation().getDirection();
-        direction.setY(0);
-        if (direction.lengthSquared() > 0.0) {
-            direction.normalize();
-        }
         double multiplier = Math.max(0.0, plugin.getConfig().getDouble("settings.double-jump.multiplier", 0.5));
-        double height = Math.max(0.0, plugin.getConfig().getDouble("settings.double-jump.height", 0.3));
-        if (!hasDoubleJumpClearance(player, direction, multiplier)) {
-            direction.zero();
-        }
+        double height = Math.max(0.0, plugin.getConfig().getDouble("settings.double-jump.height", 0.7));
         Vector velocity = direction.multiply(multiplier).setY(height);
         player.setVelocity(velocity);
-        resetDoubleJumpFlight(player, remaining);
+        startDoubleJumpCooldown(player);
         showDoubleJumpsRemaining(player, remaining);
     }
 
-    private boolean hasDoubleJumpClearance(Player player, Vector direction, double distance) {
-        if (direction.lengthSquared() <= 0.0) {
-            return true;
-        }
-        Location origin = player.getLocation();
-        if (origin.getWorld() == null) {
-            return false;
-        }
-        Vector side = new Vector(-direction.getZ(), 0.0, direction.getX());
-        if (side.lengthSquared() > 0.0) {
-            side.normalize();
-        }
-        double maxDistance = Math.max(PLAYER_COLLISION_RADIUS, distance + PLAYER_COLLISION_RADIUS);
-        for (double forward = DOUBLE_JUMP_CLEARANCE_STEP; forward <= maxDistance; forward += DOUBLE_JUMP_CLEARANCE_STEP) {
-            Location center = origin.clone().add(direction.getX() * forward, 0.0, direction.getZ() * forward);
-            if (!hasTwoBlockTallClearance(center, side)) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private boolean hasTwoBlockTallClearance(Location center, Vector side) {
-        for (double offset : List.of(0.0, PLAYER_COLLISION_RADIUS, -PLAYER_COLLISION_RADIUS)) {
-            Location sample = center.clone().add(side.getX() * offset, 0.0, side.getZ() * offset);
-            if (!sample.getBlock().isPassable() || !sample.clone().add(0.0, 1.0, 0.0).getBlock().isPassable()) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private void resetDoubleJumpFlight(Player player, int remaining) {
-        player.setAllowFlight(false);
-        if (remaining <= 0) {
-            return;
-        }
+    private void startDoubleJumpCooldown(Player player) {
+        UUID playerId = player.getUniqueId();
+        doubleJumpCooldown.add(playerId);
         Bukkit.getScheduler().runTaskLater(plugin, () -> {
+            doubleJumpCooldown.remove(playerId);
             if (state == GameState.ACTIVE
                     && player.isOnline()
                     && isActive(player)
-                    && plugin.getConfig().getBoolean("settings.double-jump.enabled", true)
-                    && doubleJumpsRemaining.getOrDefault(player.getUniqueId(), 0) > 0) {
+                    && plugin.getConfig().getBoolean("settings.double-jump.enabled", true)) {
                 player.setFlying(false);
-                player.setAllowFlight(true);
+                player.setAllowFlight(doubleJumpsRemaining.getOrDefault(playerId, 0) > 0);
             }
-        }, 1L);
+        }, 20L);
     }
 
     private void showDoubleJumpsRemaining(Player player, int remaining) {
@@ -1144,6 +1143,7 @@ public final class GameManager implements Listener {
         }
         sessions.remove(event.getPlayer().getUniqueId());
         doubleJumpsRemaining.remove(event.getPlayer().getUniqueId());
+        doubleJumpCooldown.remove(event.getPlayer().getUniqueId());
         dataManager.save();
     }
 
@@ -1194,7 +1194,18 @@ public final class GameManager implements Listener {
     public void onDamage(EntityDamageEvent event) {
         if (event.getEntity() instanceof Player player && isActive(player)) {
             event.setCancelled(true);
+            if (isLethalDamage(player, event)) {
+                player.setFireTicks(0);
+                eliminate(player, "messages.lost", false, true);
+            }
         }
+    }
+
+    private boolean isLethalDamage(Player player, EntityDamageEvent event) {
+        return event.getCause() == EntityDamageEvent.DamageCause.KILL
+                || event.getCause() == EntityDamageEvent.DamageCause.SUICIDE
+                || event.getCause() == EntityDamageEvent.DamageCause.VOID
+                || event.getFinalDamage() >= player.getHealth();
     }
 
     @EventHandler(ignoreCancelled = true)
